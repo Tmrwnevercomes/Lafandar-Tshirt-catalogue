@@ -25,10 +25,7 @@
         </header>
 
         <div id="product-grid" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
-            <!-- Loading Spinner -->
-            <div id="loading" class="col-span-full flex justify-center items-center h-64">
-                <div class="loader"></div>
-            </div>
+            <div id="loading" class="col-span-full flex justify-center items-center h-64"><div class="loader"></div></div>
         </div>
 
         <div class="fixed bottom-6 right-6 z-40">
@@ -39,12 +36,14 @@
         </div>
     </div>
 
-    <!-- Modals (Cart, Details) and Toast are unchanged -->
     <div id="cart-modal" class="modal fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
         <div class="modal-content bg-white rounded-lg shadow-xl w-full max-w-lg mx-auto">
             <div class="p-4 border-b flex justify-between items-center"><h2 class="text-2xl font-semibold">Your Order</h2><button class="close-modal-btn text-gray-500 hover:text-gray-800 text-3xl leading-none">&times;</button></div>
             <div id="cart-items" class="p-6 max-h-80 overflow-y-auto"></div>
-            <div class="p-4 bg-gray-50 border-t flex justify-end"><button id="checkout-button" class="bg-green-500 text-white font-bold py-2 px-6 rounded-lg hover:bg-green-600 transition">Proceed to Checkout</button></div>
+            <div class="p-4 bg-gray-50 border-t flex justify-between items-center">
+                <p class="text-lg font-semibold">Total: <span id="cart-total">₹0.00</span></p>
+                <button id="checkout-button" class="bg-green-500 text-white font-bold py-2 px-6 rounded-lg hover:bg-green-600 transition">Proceed to Checkout</button>
+            </div>
         </div>
     </div>
     <div id="details-modal" class="modal fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
@@ -56,12 +55,10 @@
     </div>
     <div id="toast" class="fixed top-5 right-5 bg-green-500 text-white py-2 px-4 rounded-lg shadow-md opacity-0 transition-opacity duration-300 z-50">Item added to cart!</div>
 
-    <!-- Firebase Scripts -->
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
 
     <script>
-        // --- START: FIREBASE CONFIGURATION ---
         // PASTE YOUR FIREBASE CONFIGURATION HERE
         const firebaseConfig = {
   apiKey: "AIzaSyAuO5iyXCHYZS9nS2BViu-259sb2CUSZjo",
@@ -72,39 +69,21 @@
   appId: "1:428518895959:web:8e1fccd4d6f1e2c8b00e12"
 };
 
-        // --- END: FIREBASE CONFIGURATION ---
-
-        // --- START: FIX - ADD CONFIGURATION CHECK ---
-        // This check ensures that the Firebase configuration has been updated.
-        // If not, it displays a clear error message instead of causing a connection error.
-        if (firebaseConfig.apiKey === "YOUR_API_KEY" || firebaseConfig.projectId === "YOUR_PROJECT_ID") {
-            const productGrid = document.getElementById('product-grid');
-            productGrid.innerHTML = `
-                <div class="col-span-full p-8 text-center bg-red-100 border border-red-400 text-red-700 rounded-lg">
-                    <h2 class="text-2xl font-bold mb-4">Configuration Error</h2>
-                    <p>The Firebase configuration is missing or incorrect in your <code>index.html</code> file.</p>
-                    <p class="mt-2">Please follow the setup instructions to get your configuration from the Firebase Console and paste it into the <code>firebaseConfig</code> object.</p>
-                </div>
-            `;
-            // Stop the rest of the script from running
+        if (firebaseConfig.apiKey === "YOUR_API_KEY") {
+            document.getElementById('product-grid').innerHTML = `<div class="col-span-full p-8 text-center bg-red-100 border border-red-400 text-red-700 rounded-lg"><h2 class="text-2xl font-bold mb-4">Configuration Error</h2><p>The Firebase configuration is missing or incorrect in the code.</p></div>`;
             throw new Error("Firebase configuration is not set.");
         }
-        // --- END: FIX - ADD CONFIGURATION CHECK ---
 
-        // Initialize Firebase
         firebase.initializeApp(firebaseConfig);
         const db = firebase.firestore();
 
         document.addEventListener('DOMContentLoaded', () => {
             const yourWhatsAppNumber = '918210746035'; 
-            
-            let products = []; // This will be filled from Firebase
+            let products = [];
             let cart = {}; 
 
             const productGrid = document.getElementById('product-grid');
             const loadingSpinner = document.getElementById('loading');
-            
-            // All other element selectors are the same...
             const cartModal = document.getElementById('cart-modal');
             const detailsModal = document.getElementById('details-modal');
             const viewCartButton = document.getElementById('view-cart-button');
@@ -112,10 +91,10 @@
             const sendWhatsappButton = document.getElementById('send-whatsapp-button');
             const cartItemsContainer = document.getElementById('cart-items');
             const cartCount = document.getElementById('cart-count');
+            const cartTotal = document.getElementById('cart-total');
             const toast = document.getElementById('toast');
             const ownerDetailsForm = document.getElementById('owner-details-form');
 
-            // --- FETCH PRODUCTS FROM FIREBASE ---
             async function fetchProducts() {
                 try {
                     const snapshot = await db.collection('products').get();
@@ -123,17 +102,13 @@
                         productGrid.innerHTML = '<p class="col-span-full text-center text-gray-500">No designs have been added yet.</p>';
                         return;
                     }
-                    snapshot.forEach(doc => {
-                        products.push({ id: doc.id, ...doc.data() });
-                    });
+                    snapshot.forEach(doc => products.push({ id: doc.id, ...doc.data() }));
                     renderProducts();
                 } catch (error) {
                     console.error("Error fetching products: ", error);
-                    productGrid.innerHTML = '<p class="col-span-full text-center text-red-500">Could not load designs. Please try again later.</p>';
+                    productGrid.innerHTML = '<p class="col-span-full text-center text-red-500">Could not load designs.</p>';
                 } finally {
-                    if (loadingSpinner) {
-                        loadingSpinner.style.display = 'none';
-                    }
+                    if (loadingSpinner) loadingSpinner.style.display = 'none';
                 }
             }
 
@@ -142,15 +117,20 @@
                 products.forEach(product => {
                     const card = document.createElement('div');
                     card.className = 'bg-white rounded-lg shadow-md overflow-hidden flex flex-col';
-                    
                     const sizeOptions = product.sizes.map(size => `<option value="${size}">${size}</option>`).join('');
                     const colorOptions = product.colors.map(color => `<option value="${color}">${color}</option>`).join('');
 
                     card.innerHTML = `
                         <img src="${product.imageUrl}" alt="${product.name}" class="w-full h-64 object-cover" onerror="this.onerror=null;this.src='https://placehold.co/400x500/cccccc/ffffff?text=Image+Not+Found';">
                         <div class="p-4 flex flex-col flex-grow">
-                            <h3 class="text-lg font-semibold mb-2">${product.name}</h3>
-                            <div class="mt-auto">
+                            <div class="flex justify-between items-start">
+                                <div>
+                                    <p class="text-xs font-semibold text-indigo-600 uppercase">${product.category || 'T-Shirt'}</p>
+                                    <h3 class="text-lg font-semibold">${product.name}</h3>
+                                </div>
+                                <p class="text-lg font-bold text-gray-800">₹${product.price || '0.00'}</p>
+                            </div>
+                            <div class="mt-auto pt-4">
                                 <div class="grid grid-cols-2 gap-2 mb-2">
                                     <select class="product-size w-full p-2 border border-gray-300 rounded-md">${sizeOptions}</select>
                                     <select class="product-color w-full p-2 border border-gray-300 rounded-md">${colorOptions}</select>
@@ -159,7 +139,6 @@
                                     <input type="number" min="1" placeholder="Qty" class="quantity-input w-20 p-2 border border-gray-300 rounded-md">
                                     <button class="add-to-cart-btn flex-1 bg-indigo-500 text-white font-semibold py-2 px-4 rounded-md hover:bg-indigo-600 transition" data-product-id="${product.id}">Add</button>
                                 </div>
-                                <p class="error-message" style="display: none; color: #ef4444; font-size: 0.875rem; margin-top: 0.25rem;">Please enter a valid quantity.</p>
                             </div>
                         </div>
                     `;
@@ -167,7 +146,6 @@
                 });
             }
 
-            // --- All other functions (addToCart, renderCartItems, etc.) remain the same ---
             function addToCart(productId, quantity, size, color) {
                 const product = products.find(p => p.id == productId);
                 if (!product) return;
@@ -175,35 +153,50 @@
                 if (cart[cartItemId]) {
                     cart[cartItemId].quantity += quantity;
                 } else {
-                    cart[cartItemId] = { name: product.name, quantity, size, color };
+                    cart[cartItemId] = { name: product.name, quantity, size, color, price: product.price || 0 };
                 }
-                updateCartCount();
+                updateCart();
                 showToast();
             }
-            function showToast() { toast.classList.remove('opacity-0'); setTimeout(() => { toast.classList.add('opacity-0'); }, 2000); }
-            function updateCartCount() { const totalItems = Object.values(cart).reduce((sum, item) => sum + item.quantity, 0); cartCount.textContent = totalItems; }
-            function renderCartItems() {
+            
+            function updateCart() {
+                let totalItems = 0;
+                let totalPrice = 0;
                 cartItemsContainer.innerHTML = '';
+
                 if (Object.keys(cart).length === 0) {
                     cartItemsContainer.innerHTML = '<p class="text-gray-500 text-center">Your cart is empty.</p>';
                     checkoutButton.disabled = true;
                     checkoutButton.classList.add('opacity-50', 'cursor-not-allowed');
-                    return;
+                } else {
+                    checkoutButton.disabled = false;
+                    checkoutButton.classList.remove('opacity-50', 'cursor-not-allowed');
+                    for (const cartItemId in cart) {
+                        const item = cart[cartItemId];
+                        totalItems += item.quantity;
+                        totalPrice += item.quantity * item.price;
+                        const itemElement = document.createElement('div');
+                        itemElement.className = 'flex justify-between items-center py-3 border-b';
+                        itemElement.innerHTML = `
+                            <div>
+                                <p class="font-semibold">${item.name} <span class="text-sm text-gray-500">(${item.size}, ${item.color})</span></p>
+                                <p class="text-sm text-gray-600">Qty: ${item.quantity} x ₹${item.price.toFixed(2)}</p>
+                            </div>
+                            <div class="text-right">
+                                <p class="font-semibold">₹${(item.quantity * item.price).toFixed(2)}</p>
+                                <button class="remove-from-cart-btn text-xs text-red-500 hover:text-red-700 font-medium" data-cart-item-id="${cartItemId}">Remove</button>
+                            </div>
+                        `;
+                        cartItemsContainer.appendChild(itemElement);
+                    }
                 }
-                checkoutButton.disabled = false;
-                checkoutButton.classList.remove('opacity-50', 'cursor-not-allowed');
-                for (const cartItemId in cart) {
-                    const item = cart[cartItemId];
-                    const itemElement = document.createElement('div');
-                    itemElement.className = 'flex justify-between items-center py-3 border-b';
-                    itemElement.innerHTML = `<div><p class="font-semibold">${item.name}</p><p class="text-sm text-gray-600">Size: ${item.size}, Color: ${item.color}</p><p class="text-sm text-gray-600">Quantity: ${item.quantity}</p></div><button class="remove-from-cart-btn text-red-500 hover:text-red-700 font-bold" data-cart-item-id="${cartItemId}">Remove</button>`;
-                    cartItemsContainer.appendChild(itemElement);
-                }
+                cartCount.textContent = totalItems;
+                cartTotal.textContent = `₹${totalPrice.toFixed(2)}`;
             }
-            function removeFromCart(cartItemId) { delete cart[cartItemId]; renderCartItems(); updateCartCount(); }
-            function toggleModal(modal, show) { if (show) { modal.classList.add('is-open'); } else { modal.classList.remove('is-open'); } }
+
+            function showToast() { toast.classList.remove('opacity-0'); setTimeout(() => toast.classList.add('opacity-0'), 2000); }
+            function toggleModal(modal, show) { if (show) modal.classList.add('is-open'); else modal.classList.remove('is-open'); }
             
-            // Event Listeners (mostly unchanged)
             productGrid.addEventListener('click', (e) => {
                 if (e.target.classList.contains('add-to-cart-btn')) {
                     const cardBody = e.target.closest('.p-4');
@@ -211,40 +204,48 @@
                     const quantityInput = cardBody.querySelector('.quantity-input');
                     const size = cardBody.querySelector('.product-size').value;
                     const color = cardBody.querySelector('.product-color').value;
-                    const errorMessage = cardBody.querySelector('.error-message');
                     const quantity = parseInt(quantityInput.value, 10);
                     if (!isNaN(quantity) && quantity > 0) {
                         addToCart(productId, quantity, size, color);
                         quantityInput.value = '';
-                        errorMessage.style.display = 'none';
-                        quantityInput.classList.remove('border-red-500');
                     } else {
-                        errorMessage.style.display = 'block';
                         quantityInput.classList.add('border-red-500');
+                        setTimeout(() => quantityInput.classList.remove('border-red-500'), 2000);
                     }
                 }
             });
-            cartItemsContainer.addEventListener('click', (e) => { if (e.target.classList.contains('remove-from-cart-btn')) { removeFromCart(e.target.dataset.cartItemId); } });
-            viewCartButton.addEventListener('click', () => { renderCartItems(); toggleModal(cartModal, true); });
+
+            cartItemsContainer.addEventListener('click', (e) => {
+                if (e.target.classList.contains('remove-from-cart-btn')) {
+                    delete cart[e.target.dataset.cartItemId];
+                    updateCart();
+                }
+            });
+
+            viewCartButton.addEventListener('click', () => { updateCart(); toggleModal(cartModal, true); });
             checkoutButton.addEventListener('click', () => { toggleModal(cartModal, false); toggleModal(detailsModal, true); });
-            document.querySelectorAll('.close-modal-btn').forEach(btn => { btn.addEventListener('click', () => { toggleModal(cartModal, false); toggleModal(detailsModal, false); }); });
-            [cartModal, detailsModal].forEach(modal => { modal.addEventListener('click', (e) => { if (e.target === modal) { toggleModal(modal, false); } }); });
+            document.querySelectorAll('.close-modal-btn').forEach(btn => btn.addEventListener('click', () => { toggleModal(cartModal, false); toggleModal(detailsModal, false); }));
+            [cartModal, detailsModal].forEach(modal => modal.addEventListener('click', (e) => { if (e.target === modal) toggleModal(modal, false); }));
+
             sendWhatsappButton.addEventListener('click', () => {
                 if (!ownerDetailsForm.checkValidity()) { ownerDetailsForm.reportValidity(); return; }
                 const formData = new FormData(ownerDetailsForm);
                 const ownerDetails = Object.fromEntries(formData.entries());
                 let message = `*New T-Shirt Order*\n\n*From:* ${ownerDetails.ownerName}\n*Shop:* ${ownerDetails.shopName}\n*Address:* ${ownerDetails.shopAddress}\n\n--- *Order Details* ---\n`;
-                for (const cartItemId in cart) { const item = cart[cartItemId]; message += `- *${item.name}* (${item.size}, ${item.color}): ${item.quantity} pcs\n`; }
-                message += `\nThank you!`;
+                let totalPrice = 0;
+                for (const cartItemId in cart) { 
+                    const item = cart[cartItemId];
+                    const itemTotal = item.quantity * item.price;
+                    totalPrice += itemTotal;
+                    message += `- *${item.name}* (${item.size}, ${item.color})\n  *Qty:* ${item.quantity} x ₹${item.price.toFixed(2)} = *₹${itemTotal.toFixed(2)}*\n`;
+                }
+                message += `\n*GRAND TOTAL: ₹${totalPrice.toFixed(2)}*\n\nThank you!`;
                 const whatsappUrl = `https://wa.me/${yourWhatsAppNumber}?text=${encodeURIComponent(message)}`;
                 window.open(whatsappUrl, '_blank');
             });
 
-            // Initial Load
             fetchProducts();
         });
     </script>
 </body>
 </html>
-
-
