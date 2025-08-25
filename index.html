@@ -97,7 +97,7 @@
 
             async function fetchProducts() {
                 try {
-                    const snapshot = await db.collection('products').get();
+                    const snapshot = await db.collection('products').orderBy("name").get();
                     if (snapshot.empty) {
                         productGrid.innerHTML = '<p class="col-span-full text-center text-gray-500">No designs have been added yet.</p>';
                         return;
