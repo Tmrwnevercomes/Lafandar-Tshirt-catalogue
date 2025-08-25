@@ -49,11 +49,13 @@
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
                     <div>
                         <label for="product-category" class="block text-sm font-medium text-gray-700 mb-1">Category</label>
-                        <input type="text" id="product-category" placeholder="e.g. Oversize, Hoodie" class="w-full p-2 border border-gray-300 rounded-md" required>
+                        <select id="product-category" class="w-full p-2 border border-gray-300 rounded-md" required>
+                            <!-- Categories will be populated by JS -->
+                        </select>
                     </div>
                     <div>
                         <label for="product-price" class="block text-sm font-medium text-gray-700 mb-1">Price</label>
-                        <input type="number" id="product-price" placeholder="e.g. 499" min="0" step="0.01" class="w-full p-2 border border-gray-300 rounded-md" required>
+                        <input type="number" id="product-price" class="w-full p-2 border border-gray-300 rounded-md bg-gray-100" readonly>
                     </div>
                 </div>
                 <div class="mb-4">
@@ -86,7 +88,7 @@
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-storage.js"></script>
 
     <script>
-       const firebaseConfig = {
+        const firebaseConfig = {
   apiKey: "AIzaSyAuO5iyXCHYZS9nS2BViu-259sb2CUSZjo",
   authDomain: "tshirt-catalog-v2.firebaseapp.com",
   projectId: "tshirt-catalog-v2",
@@ -94,7 +96,17 @@
   messagingSenderId: "428518895959",
   appId: "1:428518895959:web:8e1fccd4d6f1e2c8b00e12"
 };
+
         const ADMIN_PASSWORD = "12345678";
+
+        // --- DEFINE YOUR CATEGORIES AND PRICES HERE ---
+        const categoryPrices = {
+            "Oversize Tee": 599,
+            "Hoodie": 899,
+            "Standard Tee": 399,
+            "Polo T-Shirt": 699,
+            "Full Sleeve": 499
+        };
 
         firebase.initializeApp(firebaseConfig);
         const db = firebase.firestore();
@@ -112,6 +124,22 @@
             const saveBtn = document.getElementById('save-btn');
             const progressContainer = document.getElementById('upload-progress-container');
             const progressBar = document.getElementById('upload-progress-bar');
+            const categoryDropdown = document.getElementById('product-category');
+            const priceInput = document.getElementById('product-price');
+
+            // Populate category dropdown
+            for (const category in categoryPrices) {
+                const option = document.createElement('option');
+                option.value = category;
+                option.textContent = category;
+                categoryDropdown.appendChild(option);
+            }
+
+            // Update price when category changes
+            categoryDropdown.addEventListener('change', (e) => {
+                const selectedCategory = e.target.value;
+                priceInput.value = categoryPrices[selectedCategory] || 0;
+            });
 
             function checkPassword() {
                 const storedPassword = sessionStorage.getItem('adminPass');
@@ -132,7 +160,7 @@
             }
 
             function loadProducts() {
-                productsCollection.onSnapshot(snapshot => {
+                productsCollection.orderBy("name").onSnapshot(snapshot => {
                     productList.innerHTML = '';
                     if (snapshot.empty) {
                         productList.innerHTML = '<p class="text-center text-gray-500 p-8">No designs found. Click "Add New Design" to start.</p>';
@@ -149,7 +177,6 @@
                                     <p class="font-semibold text-lg">${product.name}</p>
                                     <p class="text-sm text-gray-500">Category: ${product.category || 'N/A'}</p>
                                     <p class="text-sm text-gray-500">Sizes: ${product.sizes ? product.sizes.join(', ') : ''}</p>
-                                    <p class="text-sm text-gray-500">Colors: ${product.colors ? product.colors.join(', ') : ''}</p>
                                 </div>
                             </div>
                             <div class="text-right">
@@ -174,8 +201,8 @@
                     modalTitle.textContent = 'Edit Design';
                     document.getElementById('product-id').value = product.id;
                     document.getElementById('product-name').value = product.name;
-                    document.getElementById('product-category').value = product.category || '';
-                    document.getElementById('product-price').value = product.price || '';
+                    categoryDropdown.value = product.category || '';
+                    priceInput.value = product.price || 0;
                     document.getElementById('existing-image-url').value = product.imageUrl;
                     document.getElementById('product-sizes').value = product.sizes ? product.sizes.join(', ') : '';
                     document.getElementById('product-colors').value = product.colors ? product.colors.join(', ') : '';
@@ -183,6 +210,10 @@
                     modalTitle.textContent = 'Add New Design';
                     document.getElementById('product-id').value = '';
                     document.getElementById('existing-image-url').value = '';
+                    // Set default price for the first category in the list
+                    const firstCategory = Object.keys(categoryPrices)[0];
+                    categoryDropdown.value = firstCategory;
+                    priceInput.value = categoryPrices[firstCategory];
                 }
                 productModal.classList.add('is-open');
             }
@@ -203,8 +234,8 @@
 
                 const productData = {
                     name: document.getElementById('product-name').value,
-                    category: document.getElementById('product-category').value,
-                    price: parseFloat(document.getElementById('product-price').value),
+                    category: categoryDropdown.value,
+                    price: parseFloat(priceInput.value),
                     sizes: document.getElementById('product-sizes').value.split(',').map(s => s.trim()).filter(Boolean),
                     colors: document.getElementById('product-colors').value.split(',').map(c => c.trim()).filter(Boolean),
                 };
@@ -274,4 +305,3 @@
     </script>
 </body>
 </html>
-
