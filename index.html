@@ -14,6 +14,10 @@
         .modal.is-open .modal-content { transform: scale(1); }
         .loader { border: 4px solid #f3f3f3; border-top: 4px solid #4f46e5; border-radius: 50%; width: 40px; height: 40px; animation: spin 1s linear infinite; }
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        /* Custom scrollbar for option lists */
+        .option-list::-webkit-scrollbar { width: 4px; }
+        .option-list::-webkit-scrollbar-track { background: #f1f1f1; }
+        .option-list::-webkit-scrollbar-thumb { background: #a0aec0; border-radius: 10px; }
     </style>
 </head>
 <body class="bg-gray-100 text-gray-800">
@@ -21,7 +25,7 @@
     <div class="container mx-auto p-4 sm:p-6 lg:p-8">
         <header class="text-center mb-8">
             <h1 class="text-4xl font-bold text-gray-900">T-Shirt Catalog</h1>
-            <p class="text-lg text-gray-600 mt-2">Browse our latest designs and place your order.</p>
+            <p class="text-lg text-gray-600 mt-2">Select multiple options for easy bulk ordering.</p>
         </header>
 
         <div id="product-grid" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
@@ -42,10 +46,7 @@
             <div class="p-4 border-b flex justify-between items-center"><h2 class="text-2xl font-semibold">Your Order</h2><button class="close-modal-btn text-gray-500 hover:text-gray-800 text-3xl leading-none" aria-label="Close">&times;</button></div>
             <div id="cart-items" class="p-6 max-h-80 overflow-y-auto"></div>
             <div class="p-4 bg-gray-50 border-t flex justify-between items-center">
-                <div>
-                    <p class="text-lg font-semibold">Total: <span id="cart-total">₹0.00</span></p>
-                    <button id="clear-cart-btn" class="text-xs text-red-500 hover:text-red-700 font-medium mt-1" style="display: none;">Clear Cart</button>
-                </div>
+                <div><p class="text-lg font-semibold">Total: <span id="cart-total">₹0.00</span></p><button id="clear-cart-btn" class="text-xs text-red-500 hover:text-red-700 font-medium mt-1" style="display: none;">Clear Cart</button></div>
                 <button id="checkout-button" class="bg-green-500 text-white font-bold py-2 px-6 rounded-lg hover:bg-green-600 transition">Proceed to Checkout</button>
             </div>
         </div>
@@ -53,7 +54,7 @@
     <div id="details-modal" class="modal fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
         <div class="modal-content bg-white rounded-lg shadow-xl w-full max-w-md mx-auto"><div class="p-4 border-b flex justify-between items-center"><h2 class="text-2xl font-semibold">Your Details</h2><button class="close-modal-btn text-gray-500 hover:text-gray-800 text-3xl leading-none" aria-label="Close">&times;</button></div><div class="p-6"><form id="owner-details-form"><div class="mb-4"><label for="shop-name" class="block text-sm font-medium text-gray-700 mb-1">Shop Name</label><input type="text" id="shop-name" name="shopName" class="w-full p-2 border border-gray-300 rounded-md" required></div><div class="mb-4"><label for="owner-name" class="block text-sm font-medium text-gray-700 mb-1">Your Name</label><input type="text" id="owner-name" name="ownerName" class="w-full p-2 border border-gray-300 rounded-md" required></div><div class="mb-4"><label for="shop-address" class="block text-sm font-medium text-gray-700 mb-1">Shop Address</label><textarea id="shop-address" name="shopAddress" rows="3" class="w-full p-2 border border-gray-300 rounded-md" required></textarea></div></form></div><div class="p-4 bg-gray-50 border-t flex justify-end"><button id="send-whatsapp-button" class="bg-green-500 text-white font-bold py-2 px-6 rounded-lg hover:bg-green-600 transition">Confirm & Send Order</button></div></div>
     </div>
-    <div id="toast" class="fixed top-5 right-5 bg-green-500 text-white py-2 px-4 rounded-lg shadow-md opacity-0 transition-opacity duration-300 z-50">Item added to cart!</div>
+    <div id="toast" class="fixed top-5 right-5 bg-green-500 text-white py-2 px-4 rounded-lg shadow-md opacity-0 transition-opacity duration-300 z-50">Item(s) added to cart!</div>
     <div id="image-viewer-modal" class="modal fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center p-4 z-50">
         <div class="relative max-w-4xl max-h-full"><button id="close-image-viewer" class="absolute -top-3 -right-3 text-white bg-black bg-opacity-50 rounded-full h-8 w-8 flex items-center justify-center text-2xl z-10" aria-label="Close">&times;</button><img id="full-view-image" src="" alt="Full view" class="max-w-full max-h-screen object-contain rounded-lg"></div>
     </div>
@@ -70,9 +71,8 @@
   messagingSenderId: "428518895959",
   appId: "1:428518895959:web:8e1fccd4d6f1e2c8b00e12"
 };
-
         if (firebaseConfig.apiKey === "YOUR_API_KEY") {
-            document.getElementById('product-grid').innerHTML = `<div class="col-span-full p-8 text-center bg-red-100 border border-red-400 text-red-700 rounded-lg"><h2 class="text-2xl font-bold mb-4">Configuration Error</h2><p>The Firebase configuration is missing or incorrect in the code.</p></div>`;
+            document.getElementById('product-grid').innerHTML = `<div class="col-span-full p-8 text-center bg-red-100 border border-red-400 text-red-700 rounded-lg"><h2 class="text-2xl font-bold mb-4">Configuration Error</h2><p>The Firebase configuration is missing or incorrect.</p></div>`;
             throw new Error("Firebase configuration is not set.");
         }
 
@@ -85,18 +85,8 @@
             let cart = {}; 
             let toastTimer;
 
-            // --- NEW: Load cart from localStorage ---
-            function loadCart() {
-                const savedCart = localStorage.getItem('tshirtCart');
-                if (savedCart) {
-                    cart = JSON.parse(savedCart);
-                }
-            }
-
-            // --- NEW: Save cart to localStorage ---
-            function saveCart() {
-                localStorage.setItem('tshirtCart', JSON.stringify(cart));
-            }
+            function loadCart() { const savedCart = localStorage.getItem('tshirtCart'); if (savedCart) cart = JSON.parse(savedCart); }
+            function saveCart() { localStorage.setItem('tshirtCart', JSON.stringify(cart)); }
 
             const productGrid = document.getElementById('product-grid');
             const loadingSpinner = document.getElementById('loading');
@@ -118,18 +108,11 @@
             async function fetchProducts() {
                 try {
                     const snapshot = await db.collection('products').orderBy("name").get();
-                    if (snapshot.empty) {
-                        productGrid.innerHTML = '<p class="col-span-full text-center text-gray-500">No designs have been added yet.</p>';
-                        return;
-                    }
+                    if (snapshot.empty) { productGrid.innerHTML = '<p class="col-span-full text-center text-gray-500">No designs have been added yet.</p>'; return; }
                     snapshot.forEach(doc => products.push({ id: doc.id, ...doc.data() }));
                     renderProducts();
-                } catch (error) {
-                    console.error("Error fetching products: ", error);
-                    productGrid.innerHTML = '<p class="col-span-full text-center text-red-500">Could not load designs.</p>';
-                } finally {
-                    if (loadingSpinner) loadingSpinner.style.display = 'none';
-                }
+                } catch (error) { console.error("Error fetching products: ", error); productGrid.innerHTML = '<p class="col-span-full text-center text-red-500">Could not load designs.</p>'; } 
+                finally { if (loadingSpinner) loadingSpinner.style.display = 'none'; }
             }
 
             function renderProducts() {
@@ -139,34 +122,41 @@
                     card.className = 'bg-white rounded-lg shadow-md overflow-hidden flex flex-col';
                     
                     const hasVariants = product.variants && Object.keys(product.variants).length > 0;
-                    const firstVariantName = hasVariants ? Object.keys(product.variants)[0] : '';
-                    const firstVariantPrice = hasVariants ? product.variants[firstVariantName] : 0;
+                    const prices = hasVariants ? Object.values(product.variants) : [0];
+                    const priceRange = prices.length > 1 ? `₹${Math.min(...prices)} - ₹${Math.max(...prices)}` : `₹${prices[0]}`;
 
-                    const variantOptions = hasVariants ? Object.keys(product.variants).map(name => `<option value="${name}">${name}</option>`).join('') : '';
-                    const sizeOptions = product.sizes.map(size => `<option value="${size}">${size}</option>`).join('');
-                    const colorOptions = product.colors.map(color => `<option value="${color}">${color}</option>`).join('');
+                    const createCheckboxList = (items, type) => items.map(item => `
+                        <label class="flex items-center space-x-2 text-sm"><input type="checkbox" class="form-checkbox h-4 w-4 text-indigo-600 rounded" data-type="${type}" value="${item}"><span>${item}</span></label>
+                    `).join('');
+
+                    const variantCheckboxes = hasVariants ? Object.keys(product.variants).map(name => `
+                        <label class="flex items-center space-x-2 text-sm"><input type="checkbox" class="form-checkbox h-4 w-4 text-indigo-600 rounded" data-type="variant" value="${name}"><span>${name}</span></label>
+                    `).join('') : '<p class="text-sm text-gray-500">Not Available</p>';
 
                     card.innerHTML = `
                         <img src="${product.imageUrl}" alt="${product.name}" loading="lazy" class="product-image-clickable w-full h-64 object-cover cursor-pointer" onerror="this.onerror=null;this.src='https://placehold.co/400x500/cccccc/ffffff?text=Image+Not+Found';">
                         <div class="p-4 flex flex-col flex-grow">
-                            <div class="flex justify-between items-start">
+                            <div class="flex justify-between items-start mb-2">
                                 <h3 class="text-lg font-semibold">${product.name}</h3>
-                                <p class="product-price text-lg font-bold text-gray-800">₹${firstVariantPrice.toFixed(2)}</p>
+                                <p class="product-price text-lg font-bold text-gray-800">${priceRange}</p>
                             </div>
-                            <div class="mt-auto pt-4">
-                                <div class="mb-2">
-                                    <select class="product-variant w-full p-2 border border-gray-300 rounded-md" ${!hasVariants ? 'disabled' : ''}>
-                                        ${hasVariants ? variantOptions : '<option value="">Not Available</option>'}
-                                    </select>
+                            <div class="space-y-3 mt-auto pt-2">
+                                <div class="option-group">
+                                    <p class="text-sm font-semibold mb-1">Category:</p>
+                                    <div class="option-list grid grid-cols-2 gap-1">${variantCheckboxes}</div>
                                 </div>
-                                <div class="grid grid-cols-2 gap-2 mb-2">
-                                    <select class="product-size w-full p-2 border border-gray-300 rounded-md">${sizeOptions}</select>
-                                    <select class="product-color w-full p-2 border border-gray-300 rounded-md">${colorOptions}</select>
+                                <div class="option-group">
+                                    <p class="text-sm font-semibold mb-1">Size:</p>
+                                    <div class="option-list grid grid-cols-3 gap-1">${createCheckboxList(product.sizes, 'size')}</div>
                                 </div>
-                                <div class="flex items-center space-x-2">
-                                    <input type="number" min="1" placeholder="Qty" class="quantity-input w-20 p-2 border border-gray-300 rounded-md">
-                                    <button class="add-to-cart-btn flex-1 bg-indigo-500 text-white font-semibold py-2 px-4 rounded-md hover:bg-indigo-600 transition" data-product-id="${product.id}">Add</button>
+                                <div class="option-group">
+                                    <p class="text-sm font-semibold mb-1">Color:</p>
+                                    <div class="option-list grid grid-cols-2 gap-1">${createCheckboxList(product.colors, 'color')}</div>
                                 </div>
+                            </div>
+                            <div class="flex items-center space-x-2 border-t pt-3 mt-3">
+                                <input type="number" min="1" value="1" class="quantity-input w-20 p-2 border border-gray-300 rounded-md text-center">
+                                <button class="add-to-cart-btn flex-1 bg-indigo-500 text-white font-semibold py-2 px-4 rounded-md hover:bg-indigo-600 transition" data-product-id="${product.id}">Add Selected</button>
                             </div>
                         </div>
                     `;
@@ -185,112 +175,78 @@
                 } else {
                     cart[cartItemId] = { name: product.name, category, quantity, size, color, price };
                 }
-                updateCart();
-                showToast();
             }
             
-            function updateCart() {
-                let totalItems = 0; let totalPrice = 0; cartItemsContainer.innerHTML = '';
-                const isCartEmpty = Object.keys(cart).length === 0;
-
-                if (isCartEmpty) {
-                    cartItemsContainer.innerHTML = '<p class="text-gray-500 text-center">Your cart is empty.</p>';
-                    checkoutButton.disabled = true;
-                    checkoutButton.classList.add('opacity-50', 'cursor-not-allowed');
-                    clearCartBtn.style.display = 'none';
-                } else {
-                    checkoutButton.disabled = false;
-                    checkoutButton.classList.remove('opacity-50', 'cursor-not-allowed');
-                    clearCartBtn.style.display = 'block';
-                    for (const cartItemId in cart) {
-                        const item = cart[cartItemId]; totalItems += item.quantity; totalPrice += item.quantity * item.price;
-                        const itemElement = document.createElement('div');
-                        itemElement.className = 'flex justify-between items-center py-3 border-b';
-                        itemElement.innerHTML = `<div><p class="font-semibold">${item.name} <span class="text-sm text-gray-500">(${item.category}, ${item.size}, ${item.color})</span></p><p class="text-sm text-gray-600">Qty: ${item.quantity} x ₹${item.price.toFixed(2)}</p></div><div class="text-right"><p class="font-semibold">₹${(item.quantity * item.price).toFixed(2)}</p><button class="remove-from-cart-btn text-xs text-red-500 hover:text-red-700 font-medium" data-cart-item-id="${cartItemId}">Remove</button></div>`;
-                        cartItemsContainer.appendChild(itemElement);
-                    }
-                }
-                cartCount.textContent = totalItems;
-                cartTotal.textContent = `₹${totalPrice.toFixed(2)}`;
-                saveCart(); // Save cart on every update
-            }
-
-            function showToast() {
-                clearTimeout(toastTimer);
-                toast.classList.remove('opacity-0');
-                toastTimer = setTimeout(() => {
-                    toast.classList.add('opacity-0');
-                }, 2000);
-            }
-
-            function toggleModal(modal, show) { if (show) modal.classList.add('is-open'); else modal.classList.remove('is-open'); }
+            function updateCart() { /* Unchanged from previous version */ }
+            function showToast() { /* Unchanged from previous version */ }
+            function toggleModal(modal, show) { /* Unchanged from previous version */ }
             
             productGrid.addEventListener('click', (e) => {
                 if (e.target.classList.contains('add-to-cart-btn')) {
                     const cardBody = e.target.closest('.p-4');
                     const productId = e.target.dataset.productId;
                     const quantityInput = cardBody.querySelector('.quantity-input');
-                    const category = cardBody.querySelector('.product-variant').value;
-                    if (!category) {
-                        alert("This product is not available in any category.");
+                    const quantity = parseInt(quantityInput.value, 10);
+
+                    const getSelected = (type) => Array.from(cardBody.querySelectorAll(`input[data-type="${type}"]:checked`)).map(cb => cb.value);
+                    
+                    const selectedVariants = getSelected('variant');
+                    const selectedSizes = getSelected('size');
+                    const selectedColors = getSelected('color');
+
+                    if (isNaN(quantity) || quantity < 1) {
+                        alert("Please enter a valid quantity.");
                         return;
                     }
-                    const size = cardBody.querySelector('.product-size').value;
-                    const color = cardBody.querySelector('.product-color').value;
-                    const quantity = parseInt(quantityInput.value, 10);
-                    if (!isNaN(quantity) && quantity > 0) {
-                        addToCart(productId, category, quantity, size, color);
-                        quantityInput.value = '';
-                    } else {
-                        quantityInput.classList.add('border-red-500');
-                        setTimeout(() => quantityInput.classList.remove('border-red-500'), 2000);
+                    if (selectedVariants.length === 0 || selectedSizes.length === 0 || selectedColors.length === 0) {
+                        alert("Please select at least one option from each category (Category, Size, and Color).");
+                        return;
+                    }
+
+                    let itemsAdded = 0;
+                    selectedVariants.forEach(variant => {
+                        selectedSizes.forEach(size => {
+                            selectedColors.forEach(color => {
+                                addToCart(productId, variant, quantity, size, color);
+                                itemsAdded++;
+                            });
+                        });
+                    });
+
+                    if (itemsAdded > 0) {
+                        updateCart();
+                        showToast();
                     }
                 }
-                if (e.target.classList.contains('product-variant')) {
-                    const selectedCategory = e.target.value;
-                    if (!selectedCategory) return;
-                    const cardBody = e.target.closest('.p-4');
-                    const priceEl = cardBody.parentElement.querySelector('.product-price');
-                    const productId = cardBody.querySelector('.add-to-cart-btn').dataset.productId;
-                    const product = products.find(p => p.id == productId);
-                    if (product && product.variants) {
-                        const newPrice = product.variants[selectedCategory] || 0;
-                        priceEl.textContent = `₹${newPrice.toFixed(2)}`;
-                    }
-                }
+                
                 if (e.target.classList.contains('product-image-clickable')) {
                     fullViewImage.src = e.target.src;
                     toggleModal(imageViewerModal, true);
                 }
             });
 
+            // --- All other event listeners and full function definitions remain the same ---
+            updateCart = function() {
+                let totalItems = 0; let totalPrice = 0; cartItemsContainer.innerHTML = ''; const isCartEmpty = Object.keys(cart).length === 0;
+                if (isCartEmpty) { cartItemsContainer.innerHTML = '<p class="text-gray-500 text-center">Your cart is empty.</p>'; checkoutButton.disabled = true; checkoutButton.classList.add('opacity-50', 'cursor-not-allowed'); clearCartBtn.style.display = 'none'; } 
+                else { checkoutButton.disabled = false; checkoutButton.classList.remove('opacity-50', 'cursor-not-allowed'); clearCartBtn.style.display = 'block';
+                    for (const cartItemId in cart) { const item = cart[cartItemId]; totalItems += item.quantity; totalPrice += item.quantity * item.price; const itemElement = document.createElement('div'); itemElement.className = 'flex justify-between items-center py-3 border-b'; itemElement.innerHTML = `<div><p class="font-semibold">${item.name} <span class="text-sm text-gray-500">(${item.category}, ${item.size}, ${item.color})</span></p><p class="text-sm text-gray-600">Qty: ${item.quantity} x ₹${item.price.toFixed(2)}</p></div><div class="text-right"><p class="font-semibold">₹${(item.quantity * item.price).toFixed(2)}</p><button class="remove-from-cart-btn text-xs text-red-500 hover:text-red-700 font-medium" data-cart-item-id="${cartItemId}">Remove</button></div>`; cartItemsContainer.appendChild(itemElement); }
+                }
+                cartCount.textContent = totalItems; cartTotal.textContent = `₹${totalPrice.toFixed(2)}`; saveCart();
+            }
+            showToast = function() { clearTimeout(toastTimer); toast.classList.remove('opacity-0'); toastTimer = setTimeout(() => { toast.classList.add('opacity-0'); }, 2000); }
+            toggleModal = function(modal, show) { if (show) modal.classList.add('is-open'); else modal.classList.remove('is-open'); }
             cartItemsContainer.addEventListener('click', (e) => { if (e.target.classList.contains('remove-from-cart-btn')) { delete cart[e.target.dataset.cartItemId]; updateCart(); } });
             viewCartButton.addEventListener('click', () => { updateCart(); toggleModal(cartModal, true); });
             checkoutButton.addEventListener('click', () => { toggleModal(cartModal, false); toggleModal(detailsModal, true); });
             document.querySelectorAll('.close-modal-btn').forEach(btn => btn.addEventListener('click', () => { toggleModal(cartModal, false); toggleModal(detailsModal, false); }));
             closeImageViewerBtn.addEventListener('click', () => toggleModal(imageViewerModal, false));
             imageViewerModal.addEventListener('click', (e) => { if (e.target === imageViewerModal) toggleModal(imageViewerModal, false); });
-            clearCartBtn.addEventListener('click', () => {
-                if (confirm("Are you sure you want to clear your entire cart?")) {
-                    cart = {};
-                    updateCart();
-                }
-            });
+            clearCartBtn.addEventListener('click', () => { if (confirm("Are you sure you want to clear your entire cart?")) { cart = {}; updateCart(); } });
+            sendWhatsappButton.addEventListener('click', () => { if (!ownerDetailsForm.checkValidity()) { ownerDetailsForm.reportValidity(); return; } const formData = new FormData(ownerDetailsForm); const ownerDetails = Object.fromEntries(formData.entries()); let message = `*New T-Shirt Order*\n\n*From:* ${ownerDetails.ownerName}\n*Shop:* ${ownerDetails.shopName}\n*Address:* ${ownerDetails.shopAddress}\n\n--- *Order Details* ---\n`; let totalPrice = 0; for (const cartItemId in cart) { const item = cart[cartItemId]; const itemTotal = item.quantity * item.price; totalPrice += itemTotal; message += `- *${item.name}* (${item.category}, ${item.size}, ${item.color})\n  *Qty:* ${item.quantity} x ₹${item.price.toFixed(2)} = *₹${itemTotal.toFixed(2)}*\n`; } message += `\n*GRAND TOTAL: ₹${totalPrice.toFixed(2)}*\n\nThank you!`; const whatsappUrl = `https://wa.me/${yourWhatsAppNumber}?text=${encodeURIComponent(message)}`; window.open(whatsappUrl, '_blank'); });
 
-            sendWhatsappButton.addEventListener('click', () => {
-                if (!ownerDetailsForm.checkValidity()) { ownerDetailsForm.reportValidity(); return; }
-                const formData = new FormData(ownerDetailsForm); const ownerDetails = Object.fromEntries(formData.entries());
-                let message = `*New T-Shirt Order*\n\n*From:* ${ownerDetails.ownerName}\n*Shop:* ${ownerDetails.shopName}\n*Address:* ${ownerDetails.shopAddress}\n\n--- *Order Details* ---\n`;
-                let totalPrice = 0;
-                for (const cartItemId in cart) { const item = cart[cartItemId]; const itemTotal = item.quantity * item.price; totalPrice += itemTotal; message += `- *${item.name}* (${item.category}, ${item.size}, ${item.color})\n  *Qty:* ${item.quantity} x ₹${item.price.toFixed(2)} = *₹${itemTotal.toFixed(2)}*\n`; }
-                message += `\n*GRAND TOTAL: ₹${totalPrice.toFixed(2)}*\n\nThank you!`;
-                const whatsappUrl = `https://wa.me/${yourWhatsAppNumber}?text=${encodeURIComponent(message)}`;
-                window.open(whatsappUrl, '_blank');
-            });
-
-            // --- INITIALIZATION ---
-            loadCart(); // Load cart from storage first
-            updateCart(); // Update UI with loaded cart
+            loadCart();
+            updateCart();
             fetchProducts();
         });
     </script>
