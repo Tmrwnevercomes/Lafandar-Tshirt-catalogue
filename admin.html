@@ -27,68 +27,53 @@
 
     <!-- Product Modal -->
     <div id="product-modal" class="modal fixed inset-0 bg-black bg-opacity-50 items-center justify-center p-4 z-50">
-        <div class="bg-white rounded-lg shadow-xl w-full max-w-lg mx-auto">
+        <div class="bg-white rounded-lg shadow-xl w-full max-w-2xl mx-auto">
             <form id="product-form" class="p-6">
-                <h2 id="modal-title" class="text-2xl font-semibold mb-4">Add New Design</h2>
+                <h2 id="modal-title" class="text-2xl font-semibold mb-6">Add New Design</h2>
                 <input type="hidden" id="product-id">
                 <input type="hidden" id="existing-image-url">
-                <div class="mb-4">
-                    <label for="product-name" class="block text-sm font-medium text-gray-700 mb-1">Design Name</label>
-                    <input type="text" id="product-name" class="w-full p-2 border border-gray-300 rounded-md" required>
-                </div>
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <!-- Left Column: Details -->
                     <div>
-                        <div class="flex justify-between items-center mb-1">
-                            <label for="product-category" class="block text-sm font-medium text-gray-700">Category</label>
-                            <button type="button" id="manage-categories-btn" class="text-xs text-indigo-600 hover:underline font-semibold">Manage</button>
+                        <div class="mb-4">
+                            <label for="product-name" class="block text-sm font-medium text-gray-700 mb-1">Design Name</label>
+                            <input type="text" id="product-name" class="w-full p-2 border border-gray-300 rounded-md" required>
                         </div>
-                        <select id="product-category" class="w-full p-2 border border-gray-300 rounded-md" required></select>
+                        <div class="mb-4">
+                            <label for="product-image-file" class="block text-sm font-medium text-gray-700 mb-1">Product Image</label>
+                            <input type="file" id="product-image-file" class="w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-indigo-50 file:text-indigo-700 hover:file:bg-indigo-100" accept="image/png, image/jpeg, image/webp">
+                            <p class="text-xs text-gray-500 mt-1">Leave blank to keep existing image when editing.</p>
+                        </div>
+                        <div id="upload-progress-container" class="mb-4" style="display: none;"><div class="progress-bar"><div id="upload-progress-bar" class="progress-bar-fill" style="width: 0%;"></div></div></div>
+                        <div class="mb-4">
+                            <label for="product-sizes" class="block text-sm font-medium text-gray-700 mb-1">Available Sizes (comma-separated)</label>
+                            <input type="text" id="product-sizes" placeholder="e.g. S, M, L, XL" class="w-full p-2 border border-gray-300 rounded-md" required>
+                        </div>
+                        <div class="mb-4">
+                            <label for="product-colors" class="block text-sm font-medium text-gray-700 mb-1">Available Colors (comma-separated)</label>
+                            <input type="text" id="product-colors" placeholder="e.g. Black, White, Navy" class="w-full p-2 border border-gray-300 rounded-md" required>
+                        </div>
                     </div>
-                    <div>
-                        <label for="product-price" class="block text-sm font-medium text-gray-700 mb-1">Price</label>
-                        <input type="number" id="product-price" class="w-full p-2 border border-gray-300 rounded-md bg-gray-100" readonly>
+
+                    <!-- Right Column: Variants -->
+                    <div class="bg-gray-50 p-4 rounded-lg">
+                        <h3 class="text-lg font-semibold mb-2">Product Variants</h3>
+                        <div id="variant-list" class="mb-4 max-h-48 overflow-y-auto space-y-2"></div>
+                        <div class="flex gap-2 items-end border-t pt-3">
+                            <input type="text" id="new-variant-name" placeholder="Category Name" class="w-full p-2 border border-gray-300 rounded-md">
+                            <input type="number" id="new-variant-price" placeholder="Price (₹)" min="0" class="w-full p-2 border border-gray-300 rounded-md">
+                            <button type="button" id="add-variant-btn" class="bg-indigo-500 text-white font-bold py-2 px-3 rounded-lg hover:bg-indigo-600 text-sm">Add</button>
+                        </div>
+                        <p id="variant-error" class="text-xs text-red-500 mt-1" style="display: none;">Please add at least one variant.</p>
                     </div>
                 </div>
-                <div class="mb-4">
-                    <label for="product-image-file" class="block text-sm font-medium text-gray-700 mb-1">Product Image</label>
-                    <input type="file" id="product-image-file" class="w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-indigo-50 file:text-indigo-700 hover:file:bg-indigo-100" accept="image/png, image/jpeg, image/webp">
-                    <p class="text-xs text-gray-500 mt-1">Leave blank to keep existing image when editing.</p>
-                </div>
-                <div id="upload-progress-container" class="mb-4" style="display: none;"><div class="progress-bar"><div id="upload-progress-bar" class="progress-bar-fill" style="width: 0%;"></div></div></div>
-                <div class="mb-4">
-                    <label for="product-sizes" class="block text-sm font-medium text-gray-700 mb-1">Sizes (comma-separated)</label>
-                    <input type="text" id="product-sizes" placeholder="e.g. S, M, L, XL" class="w-full p-2 border border-gray-300 rounded-md" required>
-                </div>
-                <div class="mb-4">
-                    <label for="product-colors" class="block text-sm font-medium text-gray-700 mb-1">Colors (comma-separated)</label>
-                    <input type="text" id="product-colors" placeholder="e.g. Black, White, Navy" class="w-full p-2 border border-gray-300 rounded-md" required>
-                </div>
-                <div class="pt-4 border-t flex justify-end space-x-2">
+
+                <div class="pt-6 border-t mt-6 flex justify-end space-x-2">
                     <button type="button" class="cancel-btn bg-gray-200 text-gray-800 font-bold py-2 px-4 rounded-lg hover:bg-gray-300">Cancel</button>
                     <button type="submit" id="save-btn" class="bg-green-500 text-white font-bold py-2 px-4 rounded-lg hover:bg-green-600">Save Design</button>
                 </div>
             </form>
-        </div>
-    </div>
-
-    <!-- Category Management Modal -->
-    <div id="category-modal" class="modal fixed inset-0 bg-black bg-opacity-50 items-center justify-center p-4 z-50">
-        <div class="bg-white rounded-lg shadow-xl w-full max-w-lg mx-auto">
-            <div class="p-6">
-                <h2 class="text-2xl font-semibold mb-4">Manage Categories</h2>
-                <div id="category-list" class="mb-4 max-h-64 overflow-y-auto"></div>
-                <form id="category-form" class="p-4 border-t">
-                    <h3 class="font-semibold mb-2">Add New Category</h3>
-                    <div class="flex gap-4">
-                        <input type="text" id="new-category-name" placeholder="Category Name" class="w-full p-2 border border-gray-300 rounded-md" required>
-                        <input type="number" id="new-category-price" placeholder="Price (₹)" min="0" class="w-full p-2 border border-gray-300 rounded-md" required>
-                        <button type="submit" class="bg-indigo-600 text-white font-bold py-2 px-4 rounded-lg hover:bg-indigo-700">Add</button>
-                    </div>
-                </form>
-            </div>
-            <div class="p-4 bg-gray-50 border-t flex justify-end">
-                <button type="button" class="cancel-btn bg-gray-200 text-gray-800 font-bold py-2 px-4 rounded-lg hover:bg-gray-300">Close</button>
-            </div>
         </div>
     </div>
 
@@ -105,492 +90,94 @@
   messagingSenderId: "428518895959",
   appId: "1:428518895959:web:8e1fccd4d6f1e2c8b00e12"
 };
-        const ADMIN_PASSWORD = "12345678";
-
-        firebase.initializeApp(firebaseConfig);
-        const db = firebase.firestore();
-        const storage = firebase.storage();
-        const productsCollection = db.collection('products');
-        const settingsRef = db.collection('settings').doc('categories');
-
-        let categoryPrices = {};
-
-        document.addEventListener('DOMContentLoaded', () => {
-            // --- ELEMENT SELECTORS ---
-            const adminPanel = document.getElementById('admin-panel');
-            const productList = document.getElementById('product-list');
-            const productModal = document.getElementById('product-modal');
-            const categoryModal = document.getElementById('category-modal');
-            const productForm = document.getElementById('product-form');
-            const categoryForm = document.getElementById('category-form');
-            const manageCategoriesBtn = document.getElementById('manage-categories-btn');
-            const addNewBtn = document.getElementById('add-new-btn');
-            const categoryDropdown = document.getElementById('product-category');
-            const priceInput = document.getElementById('product-price');
-            const categoryListDiv = document.getElementById('category-list');
-            const saveBtn = document.getElementById('save-btn');
-
-            // --- FUNCTIONS ---
-
-            async function loadCategories() {
-                try {
-                    const doc = await settingsRef.get();
-                    if (doc.exists && doc.data().priceMap) {
-                        categoryPrices = doc.data().priceMap;
-                    } else {
-                        categoryPrices = { "Oversize Tee": 599, "Hoodie": 899 };
-                        await settingsRef.set({ priceMap: categoryPrices });
-                    }
-                    updateCategoryUI();
-                } catch (error) {
-                    console.error("Error loading categories:", error);
-                }
-            }
-
-            function updateCategoryUI() {
-                categoryDropdown.innerHTML = '';
-                for (const category in categoryPrices) {
-                    const option = document.createElement('option');
-                    option.value = category;
-                    option.textContent = category;
-                    categoryDropdown.appendChild(option);
-                }
-                categoryListDiv.innerHTML = '';
-                for (const name in categoryPrices) {
-                    const price = categoryPrices[name];
-                    const itemEl = document.createElement('div');
-                    itemEl.className = 'list-item flex items-center justify-between p-2 border-b';
-                    itemEl.innerHTML = `
-                        <div>
-                            <input type="text" value="${name}" class="category-name-edit p-1 border rounded-md" data-original-name="${name}">
-                            <input type="number" value="${price}" class="category-price-edit p-1 border rounded-md w-24">
-                        </div>
-                        <div>
-                            <button class="update-category-btn bg-green-500 text-white text-xs font-bold py-1 px-2 rounded hover:bg-green-600" data-name="${name}">Save</button>
-                            <button class="delete-category-btn bg-red-500 text-white text-xs font-bold py-1 px-2 rounded hover:bg-red-600" data-name="${name}">Del</button>
-                        </div>
-                    `;
-                    categoryListDiv.appendChild(itemEl);
-                }
-            }
-            
-            function loadProducts() {
-                productsCollection.orderBy("name").onSnapshot(snapshot => {
-                    productList.innerHTML = '';
-                    if (snapshot.empty) {
-                        productList.innerHTML = '<p class="text-center text-gray-500 p-8">No designs found.</p>';
-                        return;
-                    }
-                    snapshot.forEach(doc => {
-                        const product = { id: doc.id, ...doc.data() };
-                        const productEl = document.createElement('div');
-                        productEl.className = 'flex items-center justify-between p-4 border-b';
-                        productEl.innerHTML = `
-                            <div class="flex items-center"><img src="${product.imageUrl}" alt="${product.name}" class="w-16 h-16 object-cover rounded-md mr-4" onerror="this.onerror=null;this.src='https://placehold.co/100x100/cccccc/ffffff?text=X';"><div><p class="font-semibold text-lg">${product.name}</p><p class="text-sm text-gray-500">Category: ${product.category || 'N/A'}</p><p class="text-sm text-gray-500">Sizes: ${product.sizes ? product.sizes.join(', ') : ''}</p></div></div>
-                            <div class="text-right"><p class="font-semibold text-lg text-indigo-600">₹${product.price || '0.00'}</p><div class="space-x-2 mt-2"><button class="edit-btn bg-blue-500 text-white text-sm font-bold py-1 px-3 rounded hover:bg-blue-600" data-id="${product.id}">Edit</button><button class="delete-btn bg-red-500 text-white text-sm font-bold py-1 px-3 rounded hover:bg-red-600" data-id="${product.id}" data-name="${product.name}">Delete</button></div></div>`;
-                        productList.appendChild(productEl);
-                    });
-                }, error => console.error("Error loading products: ", error));
-            }
-
-            function openModal(product = null) {
-                productForm.reset();
-                document.getElementById('upload-progress-container').style.display = 'none';
-                document.getElementById('upload-progress-bar').style.width = '0%';
-                saveBtn.disabled = false;
-                if (product) {
-                    document.getElementById('modal-title').textContent = 'Edit Design';
-                    document.getElementById('product-id').value = product.id;
-                    document.getElementById('product-name').value = product.name;
-                    categoryDropdown.value = product.category || '';
-                    priceInput.value = product.price || 0;
-                    document.getElementById('existing-image-url').value = product.imageUrl;
-                    document.getElementById('product-sizes').value = product.sizes ? product.sizes.join(', ') : '';
-                    document.getElementById('product-colors').value = product.colors ? product.colors.join(', ') : '';
-                } else {
-                    document.getElementById('modal-title').textContent = 'Add New Design';
-                    document.getElementById('product-id').value = '';
-                    document.getElementById('existing-image-url').value = '';
-                    if (categoryDropdown.options.length > 0) {
-                        categoryDropdown.selectedIndex = 0;
-                        priceInput.value = categoryPrices[categoryDropdown.value];
-                    } else {
-                        priceInput.value = 0;
-                    }
-                }
-                productModal.classList.add('is-open');
-            }
-
-            function closeModal() {
-                productModal.classList.remove('is-open');
-                categoryModal.classList.remove('is-open');
-            }
-
-            async function saveProduct(id, data) {
-                try {
-                    if (id) {
-                        await productsCollection.doc(id).update(data);
-                    } else {
-                        if (!data.imageUrl) {
-                            alert("Please select an image for the new design.");
-                            saveBtn.disabled = false;
-                            saveBtn.textContent = 'Save Design';
-                            return;
-                        }
-                        await productsCollection.add(data);
-                    }
-                    closeModal();
-                } catch (error) {
-                    console.error("Error saving product: ", error);
-                    alert("Could not save the design.");
-                } finally {
-                    saveBtn.disabled = false;
-                    saveBtn.textContent = 'Save Design';
-                }
-            }
-
-            function checkPassword() {
-                const storedPassword = sessionStorage.getItem('adminPass');
-                if (storedPassword === ADMIN_PASSWORD) {
-                    adminPanel.style.display = 'block';
-                    loadCategories().then(loadProducts);
-                    return;
-                }
-                const pass = prompt("Please enter the admin password:");
-                if (pass === ADMIN_PASSWORD) {
-                    sessionStorage.setItem('adminPass', pass);
-                    adminPanel.style.display = 'block';
-                    loadCategories().then(loadProducts);
-                } else {
-                    alert("Incorrect password.");
-                    document.body.innerHTML = '<p class="text-center p-8 text-red-500">Access Denied</p>';
-                }
-            }
-
-            // --- EVENT LISTENERS ---
-
-            addNewBtn.addEventListener('click', () => openModal());
-            document.querySelectorAll('.cancel-btn').forEach(btn => btn.addEventListener('click', closeModal));
-            
-            manageCategoriesBtn.addEventListener('click', () => {
-                productModal.classList.remove('is-open');
-                categoryModal.classList.add('is-open');
-            });
-
-            categoryDropdown.addEventListener('change', (e) => {
-                priceInput.value = categoryPrices[e.target.value] || 0;
-            });
-
-            categoryForm.addEventListener('submit', async (e) => {
-                e.preventDefault();
-                const name = document.getElementById('new-category-name').value.trim();
-                const price = parseFloat(document.getElementById('new-category-price').value);
-                if (name && !isNaN(price)) {
-                    categoryPrices[name] = price;
-                    await settingsRef.set({ priceMap: categoryPrices });
-                    updateCategoryUI();
-                    categoryForm.reset();
-                }
-            });
-
-            categoryListDiv.addEventListener('click', async (e) => {
-                const originalName = e.target.dataset.name;
-                if (!originalName) return;
-
-                if (e.target.classList.contains('delete-category-btn')) {
-                    if (confirm(`Are you sure you want to delete the category "${originalName}"?`)) {
-                        delete categoryPrices[originalName];
-                        await settingsRef.set({ priceMap: categoryPrices });
-                        updateCategoryUI();
-                    }
-                } else if (e.target.classList.contains('update-category-btn')) {
-                    const itemEl = e.target.closest('.list-item');
-                    const newName = itemEl.querySelector('.category-name-edit').value.trim();
-                    const newPrice = parseFloat(itemEl.querySelector('.category-price-edit').value);
-                    if (newName && !isNaN(newPrice)) {
-                        if (originalName !== newName) {
-                            delete categoryPrices[originalName];
-                        }
-                        categoryPrices[newName] = newPrice;
-                        await settingsRef.set({ priceMap: categoryPrices });
-                        updateCategoryUI();
-                    }
-                }
-            });
-
-            productForm.addEventListener('submit', async (e) => {
-                e.preventDefault();
-                saveBtn.disabled = true;
-                saveBtn.textContent = 'Saving...';
-                const id = document.getElementById('product-id').value;
-                const imageFile = document.getElementById('product-image-file').files[0];
-                let imageUrl = document.getElementById('existing-image-url').value;
-                const productData = {
-                    name: document.getElementById('product-name').value,
-                    category: categoryDropdown.value,
-                    price: parseFloat(priceInput.value),
-                    sizes: document.getElementById('product-sizes').value.split(',').map(s => s.trim()).filter(Boolean),
-                    colors: document.getElementById('product-colors').value.split(',').map(c => c.trim()).filter(Boolean),
-                };
-                if (imageFile) {
-                    const storageRef = storage.ref(`products/${Date.now()}-${imageFile.name}`);
-                    const uploadTask = storageRef.put(imageFile);
-                    document.getElementById('upload-progress-container').style.display = 'block';
-                    uploadTask.on('state_changed', (snapshot) => {
-                        document.getElementById('upload-progress-bar').style.width = ((snapshot.bytesTransferred / snapshot.totalBytes) * 100) + '%';
-                    }, (error) => {
-                        console.error("Upload failed:", error);
-                        alert("Image upload failed.");
-                        saveBtn.disabled = false;
-                        saveBtn.textContent = 'Save Design';
-                    }, async () => {
-                        imageUrl = await uploadTask.snapshot.ref.getDownloadURL();
-                        productData.imageUrl = imageUrl;
-                        await saveProduct(id, productData);
-                    });
-                } else {
-                    productData.imageUrl = imageUrl;
-                    await saveProduct(id, productData);
-                }
-            });
-
-            productList.addEventListener('click', async (e) => {
-                const id = e.target.dataset.id;
-                if (e.target.classList.contains('delete-btn')) {
-                    if (confirm(`Are you sure you want to delete "${e.target.dataset.name}"?`)) {
-                        try { await productsCollection.doc(id).delete(); } catch (error) { console.error("Error deleting product: ", error); }
-                    }
-                } else if (e.target.classList.contains('edit-btn')) {
-                    const doc = await productsCollection.doc(id).get();
-                    if (doc.exists) { openModal({ id: doc.id, ...doc.data() }); }
-                }
-            });
-
-            // --- INITIALIZATION ---
-            checkPassword();
-        });
-    </script>
-</body>
-</html>
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Admin Panel - T-Shirt Catalog</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-    <style>
-        body { font-family: 'Inter', sans-serif; }
-        .modal { display: none; }
-        .modal.is-open { display: flex; }
-        .list-item > div:last-child { border-bottom: none; }
-        .progress-bar { width: 100%; background-color: #e5e7eb; border-radius: 9999px; overflow: hidden; height: 0.75rem; }
-        .progress-bar-fill { height: 100%; background-color: #4f46e5; border-radius: 9999px; transition: width 0.2s ease-in-out; }
-    </style>
-</head>
-<body class="bg-gray-100">
-
-    <div id="admin-panel" class="container mx-auto p-4 sm:p-6 lg:p-8" style="display: none;">
-        <header class="flex justify-between items-center mb-8">
-            <h1 class="text-3xl font-bold text-gray-900">Manage Designs</h1>
-            <button id="add-new-btn" class="bg-indigo-600 text-white font-bold py-2 px-4 rounded-lg hover:bg-indigo-700 transition">Add New Design</button>
-        </header>
-        <div id="product-list" class="bg-white rounded-lg shadow-md"></div>
-    </div>
-
-    <!-- Product Modal -->
-    <div id="product-modal" class="modal fixed inset-0 bg-black bg-opacity-50 items-center justify-center p-4 z-50">
-        <div class="bg-white rounded-lg shadow-xl w-full max-w-lg mx-auto">
-            <form id="product-form" class="p-6">
-                <h2 id="modal-title" class="text-2xl font-semibold mb-4">Add New Design</h2>
-                <input type="hidden" id="product-id">
-                <input type="hidden" id="existing-image-url">
-                <div class="mb-4">
-                    <label for="product-name" class="block text-sm font-medium text-gray-700 mb-1">Design Name</label>
-                    <input type="text" id="product-name" class="w-full p-2 border border-gray-300 rounded-md" required>
-                </div>
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-                    <div>
-                        <div class="flex justify-between items-center mb-1">
-                            <label for="product-category" class="block text-sm font-medium text-gray-700">Category</label>
-                            <button type="button" id="manage-categories-btn" class="text-xs text-indigo-600 hover:underline font-semibold">Manage</button>
-                        </div>
-                        <select id="product-category" class="w-full p-2 border border-gray-300 rounded-md" required></select>
-                    </div>
-                    <div>
-                        <label for="product-price" class="block text-sm font-medium text-gray-700 mb-1">Price</label>
-                        <input type="number" id="product-price" class="w-full p-2 border border-gray-300 rounded-md bg-gray-100" readonly>
-                    </div>
-                </div>
-                <div class="mb-4">
-                    <label for="product-image-file" class="block text-sm font-medium text-gray-700 mb-1">Product Image</label>
-                    <input type="file" id="product-image-file" class="w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-indigo-50 file:text-indigo-700 hover:file:bg-indigo-100" accept="image/png, image/jpeg, image/webp">
-                    <p class="text-xs text-gray-500 mt-1">Leave blank to keep existing image when editing.</p>
-                </div>
-                <div id="upload-progress-container" class="mb-4" style="display: none;"><div class="progress-bar"><div id="upload-progress-bar" class="progress-bar-fill" style="width: 0%;"></div></div></div>
-                <div class="mb-4">
-                    <label for="product-sizes" class="block text-sm font-medium text-gray-700 mb-1">Sizes (comma-separated)</label>
-                    <input type="text" id="product-sizes" placeholder="e.g. S, M, L, XL" class="w-full p-2 border border-gray-300 rounded-md" required>
-                </div>
-                <div class="mb-4">
-                    <label for="product-colors" class="block text-sm font-medium text-gray-700 mb-1">Colors (comma-separated)</label>
-                    <input type="text" id="product-colors" placeholder="e.g. Black, White, Navy" class="w-full p-2 border border-gray-300 rounded-md" required>
-                </div>
-                <div class="pt-4 border-t flex justify-end space-x-2">
-                    <button type="button" class="cancel-btn bg-gray-200 text-gray-800 font-bold py-2 px-4 rounded-lg hover:bg-gray-300">Cancel</button>
-                    <button type="submit" id="save-btn" class="bg-green-500 text-white font-bold py-2 px-4 rounded-lg hover:bg-green-600">Save Design</button>
-                </div>
-            </form>
-        </div>
-    </div>
-
-    <!-- Category Management Modal -->
-    <div id="category-modal" class="modal fixed inset-0 bg-black bg-opacity-50 items-center justify-center p-4 z-50">
-        <div class="bg-white rounded-lg shadow-xl w-full max-w-lg mx-auto">
-            <div class="p-6">
-                <h2 class="text-2xl font-semibold mb-4">Manage Categories</h2>
-                <div id="category-list" class="mb-4 max-h-64 overflow-y-auto"></div>
-                <form id="category-form" class="p-4 border-t">
-                    <h3 class="font-semibold mb-2">Add New Category</h3>
-                    <div class="flex gap-4">
-                        <input type="text" id="new-category-name" placeholder="Category Name" class="w-full p-2 border border-gray-300 rounded-md" required>
-                        <input type="number" id="new-category-price" placeholder="Price (₹)" min="0" class="w-full p-2 border border-gray-300 rounded-md" required>
-                        <button type="submit" class="bg-indigo-600 text-white font-bold py-2 px-4 rounded-lg hover:bg-indigo-700">Add</button>
-                    </div>
-                </form>
-            </div>
-            <div class="p-4 bg-gray-50 border-t flex justify-end">
-                <button type="button" class="cancel-btn bg-gray-200 text-gray-800 font-bold py-2 px-4 rounded-lg hover:bg-gray-300">Close</button>
-            </div>
-        </div>
-    </div>
-
-    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-storage.js"></script>
-
-    <script>
-        const firebaseConfig = { /* PASTE YOUR FIREBASE CONFIGURATION HERE */ };
         const ADMIN_PASSWORD = "123456";
 
         firebase.initializeApp(firebaseConfig);
         const db = firebase.firestore();
         const storage = firebase.storage();
         const productsCollection = db.collection('products');
-        const settingsRef = db.collection('settings').doc('categories');
 
-        let categoryPrices = {};
+        let currentVariants = {};
 
         document.addEventListener('DOMContentLoaded', () => {
-            // --- ELEMENT SELECTORS ---
             const adminPanel = document.getElementById('admin-panel');
             const productList = document.getElementById('product-list');
             const productModal = document.getElementById('product-modal');
-            const categoryModal = document.getElementById('category-modal');
             const productForm = document.getElementById('product-form');
-            const categoryForm = document.getElementById('category-form');
-            const manageCategoriesBtn = document.getElementById('manage-categories-btn');
             const addNewBtn = document.getElementById('add-new-btn');
-            const categoryDropdown = document.getElementById('product-category');
-            const priceInput = document.getElementById('product-price');
-            const categoryListDiv = document.getElementById('category-list');
             const saveBtn = document.getElementById('save-btn');
+            const variantListDiv = document.getElementById('variant-list');
+            const addVariantBtn = document.getElementById('add-variant-btn');
 
-            // --- FUNCTIONS ---
-
-            async function loadCategories() {
-                try {
-                    const doc = await settingsRef.get();
-                    if (doc.exists && doc.data().priceMap) {
-                        categoryPrices = doc.data().priceMap;
-                    } else {
-                        categoryPrices = { "Oversize Tee": 599, "Hoodie": 899 };
-                        await settingsRef.set({ priceMap: categoryPrices });
-                    }
-                    updateCategoryUI();
-                } catch (error) {
-                    console.error("Error loading categories:", error);
+            function renderVariants() {
+                variantListDiv.innerHTML = '';
+                if (Object.keys(currentVariants).length === 0) {
+                    variantListDiv.innerHTML = '<p class="text-sm text-gray-500 text-center">No variants added yet.</p>';
                 }
-            }
-
-            function updateCategoryUI() {
-                categoryDropdown.innerHTML = '';
-                for (const category in categoryPrices) {
-                    const option = document.createElement('option');
-                    option.value = category;
-                    option.textContent = category;
-                    categoryDropdown.appendChild(option);
-                }
-                categoryListDiv.innerHTML = '';
-                for (const name in categoryPrices) {
-                    const price = categoryPrices[name];
+                for (const name in currentVariants) {
+                    const price = currentVariants[name];
                     const itemEl = document.createElement('div');
-                    itemEl.className = 'list-item flex items-center justify-between p-2 border-b';
+                    itemEl.className = 'flex items-center justify-between bg-white p-2 rounded';
                     itemEl.innerHTML = `
-                        <div>
-                            <input type="text" value="${name}" class="category-name-edit p-1 border rounded-md" data-original-name="${name}">
-                            <input type="number" value="${price}" class="category-price-edit p-1 border rounded-md w-24">
-                        </div>
-                        <div>
-                            <button class="update-category-btn bg-green-500 text-white text-xs font-bold py-1 px-2 rounded hover:bg-green-600" data-name="${name}">Save</button>
-                            <button class="delete-category-btn bg-red-500 text-white text-xs font-bold py-1 px-2 rounded hover:bg-red-600" data-name="${name}">Del</button>
-                        </div>
+                        <p class="text-sm font-medium">${name} - ₹${price}</p>
+                        <button type="button" class="delete-variant-btn text-red-500 hover:text-red-700 text-xs font-bold" data-name="${name}">Remove</button>
                     `;
-                    categoryListDiv.appendChild(itemEl);
+                    variantListDiv.appendChild(itemEl);
                 }
             }
             
-            function loadProducts() {
-                productsCollection.orderBy("name").onSnapshot(snapshot => {
-                    productList.innerHTML = '';
-                    if (snapshot.empty) {
-                        productList.innerHTML = '<p class="text-center text-gray-500 p-8">No designs found.</p>';
-                        return;
-                    }
-                    snapshot.forEach(doc => {
-                        const product = { id: doc.id, ...doc.data() };
-                        const productEl = document.createElement('div');
-                        productEl.className = 'flex items-center justify-between p-4 border-b';
-                        productEl.innerHTML = `
-                            <div class="flex items-center"><img src="${product.imageUrl}" alt="${product.name}" class="w-16 h-16 object-cover rounded-md mr-4" onerror="this.onerror=null;this.src='https://placehold.co/100x100/cccccc/ffffff?text=X';"><div><p class="font-semibold text-lg">${product.name}</p><p class="text-sm text-gray-500">Category: ${product.category || 'N/A'}</p><p class="text-sm text-gray-500">Sizes: ${product.sizes ? product.sizes.join(', ') : ''}</p></div></div>
-                            <div class="text-right"><p class="font-semibold text-lg text-indigo-600">₹${product.price || '0.00'}</p><div class="space-x-2 mt-2"><button class="edit-btn bg-blue-500 text-white text-sm font-bold py-1 px-3 rounded hover:bg-blue-600" data-id="${product.id}">Edit</button><button class="delete-btn bg-red-500 text-white text-sm font-bold py-1 px-3 rounded hover:bg-red-600" data-id="${product.id}" data-name="${product.name}">Delete</button></div></div>`;
-                        productList.appendChild(productEl);
-                    });
-                }, error => console.error("Error loading products: ", error));
-            }
+            addVariantBtn.addEventListener('click', () => {
+                const nameInput = document.getElementById('new-variant-name');
+                const priceInput = document.getElementById('new-variant-price');
+                const name = nameInput.value.trim();
+                const price = parseFloat(priceInput.value);
+
+                if (name && !isNaN(price) && price > 0) {
+                    currentVariants[name] = price;
+                    renderVariants();
+                    nameInput.value = '';
+                    priceInput.value = '';
+                } else {
+                    alert("Please enter a valid category name and price.");
+                }
+            });
+
+            variantListDiv.addEventListener('click', (e) => {
+                if (e.target.classList.contains('delete-variant-btn')) {
+                    const name = e.target.dataset.name;
+                    delete currentVariants[name];
+                    renderVariants();
+                }
+            });
 
             function openModal(product = null) {
                 productForm.reset();
                 document.getElementById('upload-progress-container').style.display = 'none';
                 document.getElementById('upload-progress-bar').style.width = '0%';
                 saveBtn.disabled = false;
+                currentVariants = {};
+
                 if (product) {
                     document.getElementById('modal-title').textContent = 'Edit Design';
                     document.getElementById('product-id').value = product.id;
                     document.getElementById('product-name').value = product.name;
-                    categoryDropdown.value = product.category || '';
-                    priceInput.value = product.price || 0;
                     document.getElementById('existing-image-url').value = product.imageUrl;
                     document.getElementById('product-sizes').value = product.sizes ? product.sizes.join(', ') : '';
                     document.getElementById('product-colors').value = product.colors ? product.colors.join(', ') : '';
+                    if (product.variants) {
+                        currentVariants = product.variants;
+                    }
                 } else {
                     document.getElementById('modal-title').textContent = 'Add New Design';
                     document.getElementById('product-id').value = '';
                     document.getElementById('existing-image-url').value = '';
-                    if (categoryDropdown.options.length > 0) {
-                        categoryDropdown.selectedIndex = 0;
-                        priceInput.value = categoryPrices[categoryDropdown.value];
-                    } else {
-                        priceInput.value = 0;
-                    }
                 }
+                renderVariants();
                 productModal.classList.add('is-open');
             }
 
             function closeModal() {
                 productModal.classList.remove('is-open');
-                categoryModal.classList.remove('is-open');
             }
 
             async function saveProduct(id, data) {
@@ -615,90 +202,67 @@
                     saveBtn.textContent = 'Save Design';
                 }
             }
-
+            
             function checkPassword() {
                 const storedPassword = sessionStorage.getItem('adminPass');
                 if (storedPassword === ADMIN_PASSWORD) {
                     adminPanel.style.display = 'block';
-                    loadCategories().then(loadProducts);
+                    loadProducts();
                     return;
                 }
                 const pass = prompt("Please enter the admin password:");
                 if (pass === ADMIN_PASSWORD) {
                     sessionStorage.setItem('adminPass', pass);
                     adminPanel.style.display = 'block';
-                    loadCategories().then(loadProducts);
+                    loadProducts();
                 } else {
                     alert("Incorrect password.");
                     document.body.innerHTML = '<p class="text-center p-8 text-red-500">Access Denied</p>';
                 }
             }
-
-            // --- EVENT LISTENERS ---
-
-            addNewBtn.addEventListener('click', () => openModal());
-            document.querySelectorAll('.cancel-btn').forEach(btn => btn.addEventListener('click', closeModal));
             
-            manageCategoriesBtn.addEventListener('click', () => {
-                productModal.classList.remove('is-open');
-                categoryModal.classList.add('is-open');
-            });
-
-            categoryDropdown.addEventListener('change', (e) => {
-                priceInput.value = categoryPrices[e.target.value] || 0;
-            });
-
-            categoryForm.addEventListener('submit', async (e) => {
-                e.preventDefault();
-                const name = document.getElementById('new-category-name').value.trim();
-                const price = parseFloat(document.getElementById('new-category-price').value);
-                if (name && !isNaN(price)) {
-                    categoryPrices[name] = price;
-                    await settingsRef.set({ priceMap: categoryPrices });
-                    updateCategoryUI();
-                    categoryForm.reset();
-                }
-            });
-
-            categoryListDiv.addEventListener('click', async (e) => {
-                const originalName = e.target.dataset.name;
-                if (!originalName) return;
-
-                if (e.target.classList.contains('delete-category-btn')) {
-                    if (confirm(`Are you sure you want to delete the category "${originalName}"?`)) {
-                        delete categoryPrices[originalName];
-                        await settingsRef.set({ priceMap: categoryPrices });
-                        updateCategoryUI();
+            function loadProducts() {
+                productsCollection.orderBy("name").onSnapshot(snapshot => {
+                    productList.innerHTML = '';
+                    if (snapshot.empty) {
+                        productList.innerHTML = '<p class="text-center text-gray-500 p-8">No designs found.</p>';
+                        return;
                     }
-                } else if (e.target.classList.contains('update-category-btn')) {
-                    const itemEl = e.target.closest('.list-item');
-                    const newName = itemEl.querySelector('.category-name-edit').value.trim();
-                    const newPrice = parseFloat(itemEl.querySelector('.category-price-edit').value);
-                    if (newName && !isNaN(newPrice)) {
-                        if (originalName !== newName) {
-                            delete categoryPrices[originalName];
-                        }
-                        categoryPrices[newName] = newPrice;
-                        await settingsRef.set({ priceMap: categoryPrices });
-                        updateCategoryUI();
-                    }
-                }
-            });
+                    snapshot.forEach(doc => {
+                        const product = { id: doc.id, ...doc.data() };
+                        const firstVariant = product.variants ? Object.keys(product.variants)[0] : 'N/A';
+                        const productEl = document.createElement('div');
+                        productEl.className = 'flex items-center justify-between p-4 border-b';
+                        productEl.innerHTML = `
+                            <div class="flex items-center"><img src="${product.imageUrl}" alt="${product.name}" class="w-16 h-16 object-cover rounded-md mr-4" onerror="this.onerror=null;this.src='https://placehold.co/100x100/cccccc/ffffff?text=X';"><div><p class="font-semibold text-lg">${product.name}</p><p class="text-sm text-gray-500">Variants: ${Object.keys(product.variants || {}).length}</p></div></div>
+                            <div class="text-right"><div class="space-x-2 mt-2"><button class="edit-btn bg-blue-500 text-white text-sm font-bold py-1 px-3 rounded hover:bg-blue-600" data-id="${product.id}">Edit</button><button class="delete-btn bg-red-500 text-white text-sm font-bold py-1 px-3 rounded hover:bg-red-600" data-id="${product.id}" data-name="${product.name}">Delete</button></div></div>`;
+                        productList.appendChild(productEl);
+                    });
+                }, error => console.error("Error loading products: ", error));
+            }
 
             productForm.addEventListener('submit', async (e) => {
                 e.preventDefault();
+                
+                if (Object.keys(currentVariants).length === 0) {
+                    document.getElementById('variant-error').style.display = 'block';
+                    return;
+                }
+                document.getElementById('variant-error').style.display = 'none';
+
                 saveBtn.disabled = true;
                 saveBtn.textContent = 'Saving...';
                 const id = document.getElementById('product-id').value;
                 const imageFile = document.getElementById('product-image-file').files[0];
                 let imageUrl = document.getElementById('existing-image-url').value;
+                
                 const productData = {
                     name: document.getElementById('product-name').value,
-                    category: categoryDropdown.value,
-                    price: parseFloat(priceInput.value),
+                    variants: currentVariants,
                     sizes: document.getElementById('product-sizes').value.split(',').map(s => s.trim()).filter(Boolean),
                     colors: document.getElementById('product-colors').value.split(',').map(c => c.trim()).filter(Boolean),
                 };
+
                 if (imageFile) {
                     const storageRef = storage.ref(`products/${Date.now()}-${imageFile.name}`);
                     const uploadTask = storageRef.put(imageFile);
@@ -733,10 +297,11 @@
                 }
             });
 
-            // --- INITIALIZATION ---
+            addNewBtn.addEventListener('click', () => openModal());
+            document.querySelectorAll('.cancel-btn').forEach(btn => btn.addEventListener('click', closeModal));
+
             checkPassword();
         });
     </script>
 </body>
 </html>
-
