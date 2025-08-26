@@ -39,22 +39,23 @@
     <!-- Modals and Toast -->
     <div id="cart-modal" class="modal fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
         <div class="modal-content bg-white rounded-lg shadow-xl w-full max-w-lg mx-auto">
-            <div class="p-4 border-b flex justify-between items-center"><h2 class="text-2xl font-semibold">Your Order</h2><button class="close-modal-btn text-gray-500 hover:text-gray-800 text-3xl leading-none">&times;</button></div>
+            <div class="p-4 border-b flex justify-between items-center"><h2 class="text-2xl font-semibold">Your Order</h2><button class="close-modal-btn text-gray-500 hover:text-gray-800 text-3xl leading-none" aria-label="Close">&times;</button></div>
             <div id="cart-items" class="p-6 max-h-80 overflow-y-auto"></div>
-            <div class="p-4 bg-gray-50 border-t flex justify-between items-center"><p class="text-lg font-semibold">Total: <span id="cart-total">₹0.00</span></p><button id="checkout-button" class="bg-green-500 text-white font-bold py-2 px-6 rounded-lg hover:bg-green-600 transition">Proceed to Checkout</button></div>
+            <div class="p-4 bg-gray-50 border-t flex justify-between items-center">
+                <div>
+                    <p class="text-lg font-semibold">Total: <span id="cart-total">₹0.00</span></p>
+                    <button id="clear-cart-btn" class="text-xs text-red-500 hover:text-red-700 font-medium mt-1" style="display: none;">Clear Cart</button>
+                </div>
+                <button id="checkout-button" class="bg-green-500 text-white font-bold py-2 px-6 rounded-lg hover:bg-green-600 transition">Proceed to Checkout</button>
+            </div>
         </div>
     </div>
     <div id="details-modal" class="modal fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-        <div class="modal-content bg-white rounded-lg shadow-xl w-full max-w-md mx-auto"><div class="p-4 border-b flex justify-between items-center"><h2 class="text-2xl font-semibold">Your Details</h2><button class="close-modal-btn text-gray-500 hover:text-gray-800 text-3xl leading-none">&times;</button></div><div class="p-6"><form id="owner-details-form"><div class="mb-4"><label for="shop-name" class="block text-sm font-medium text-gray-700 mb-1">Shop Name</label><input type="text" id="shop-name" name="shopName" class="w-full p-2 border border-gray-300 rounded-md" required></div><div class="mb-4"><label for="owner-name" class="block text-sm font-medium text-gray-700 mb-1">Your Name</label><input type="text" id="owner-name" name="ownerName" class="w-full p-2 border border-gray-300 rounded-md" required></div><div class="mb-4"><label for="shop-address" class="block text-sm font-medium text-gray-700 mb-1">Shop Address</label><textarea id="shop-address" name="shopAddress" rows="3" class="w-full p-2 border border-gray-300 rounded-md" required></textarea></div></form></div><div class="p-4 bg-gray-50 border-t flex justify-end"><button id="send-whatsapp-button" class="bg-green-500 text-white font-bold py-2 px-6 rounded-lg hover:bg-green-600 transition">Confirm & Send Order</button></div></div>
+        <div class="modal-content bg-white rounded-lg shadow-xl w-full max-w-md mx-auto"><div class="p-4 border-b flex justify-between items-center"><h2 class="text-2xl font-semibold">Your Details</h2><button class="close-modal-btn text-gray-500 hover:text-gray-800 text-3xl leading-none" aria-label="Close">&times;</button></div><div class="p-6"><form id="owner-details-form"><div class="mb-4"><label for="shop-name" class="block text-sm font-medium text-gray-700 mb-1">Shop Name</label><input type="text" id="shop-name" name="shopName" class="w-full p-2 border border-gray-300 rounded-md" required></div><div class="mb-4"><label for="owner-name" class="block text-sm font-medium text-gray-700 mb-1">Your Name</label><input type="text" id="owner-name" name="ownerName" class="w-full p-2 border border-gray-300 rounded-md" required></div><div class="mb-4"><label for="shop-address" class="block text-sm font-medium text-gray-700 mb-1">Shop Address</label><textarea id="shop-address" name="shopAddress" rows="3" class="w-full p-2 border border-gray-300 rounded-md" required></textarea></div></form></div><div class="p-4 bg-gray-50 border-t flex justify-end"><button id="send-whatsapp-button" class="bg-green-500 text-white font-bold py-2 px-6 rounded-lg hover:bg-green-600 transition">Confirm & Send Order</button></div></div>
     </div>
     <div id="toast" class="fixed top-5 right-5 bg-green-500 text-white py-2 px-4 rounded-lg shadow-md opacity-0 transition-opacity duration-300 z-50">Item added to cart!</div>
-
-    <!-- NEW: Image Viewer Modal -->
     <div id="image-viewer-modal" class="modal fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center p-4 z-50">
-        <div class="relative max-w-4xl max-h-full">
-            <button id="close-image-viewer" class="absolute -top-3 -right-3 text-white bg-black bg-opacity-50 rounded-full h-8 w-8 flex items-center justify-center text-2xl z-10">&times;</button>
-            <img id="full-view-image" src="" alt="Full view" class="max-w-full max-h-screen object-contain rounded-lg">
-        </div>
+        <div class="relative max-w-4xl max-h-full"><button id="close-image-viewer" class="absolute -top-3 -right-3 text-white bg-black bg-opacity-50 rounded-full h-8 w-8 flex items-center justify-center text-2xl z-10" aria-label="Close">&times;</button><img id="full-view-image" src="" alt="Full view" class="max-w-full max-h-screen object-contain rounded-lg"></div>
     </div>
 
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
@@ -82,20 +83,22 @@
             const yourWhatsAppNumber = '918210746035'; 
             let products = [];
             let cart = {}; 
+            let toastTimer; // For improved toast logic
 
             const productGrid = document.getElementById('product-grid');
             const loadingSpinner = document.getElementById('loading');
             const cartModal = document.getElementById('cart-modal');
             const detailsModal = document.getElementById('details-modal');
-            const imageViewerModal = document.getElementById('image-viewer-modal'); // New
-            const fullViewImage = document.getElementById('full-view-image'); // New
-            const closeImageViewerBtn = document.getElementById('close-image-viewer'); // New
+            const imageViewerModal = document.getElementById('image-viewer-modal');
+            const fullViewImage = document.getElementById('full-view-image');
+            const closeImageViewerBtn = document.getElementById('close-image-viewer');
             const viewCartButton = document.getElementById('view-cart-button');
             const checkoutButton = document.getElementById('checkout-button');
             const sendWhatsappButton = document.getElementById('send-whatsapp-button');
             const cartItemsContainer = document.getElementById('cart-items');
             const cartCount = document.getElementById('cart-count');
             const cartTotal = document.getElementById('cart-total');
+            const clearCartBtn = document.getElementById('clear-cart-btn');
             const toast = document.getElementById('toast');
             const ownerDetailsForm = document.getElementById('owner-details-form');
 
@@ -131,7 +134,7 @@
                     const colorOptions = product.colors.map(color => `<option value="${color}">${color}</option>`).join('');
 
                     card.innerHTML = `
-                        <img src="${product.imageUrl}" alt="${product.name}" class="product-image-clickable w-full h-64 object-cover cursor-pointer" onerror="this.onerror=null;this.src='https://placehold.co/400x500/cccccc/ffffff?text=Image+Not+Found';">
+                        <img src="${product.imageUrl}" alt="${product.name}" loading="lazy" class="product-image-clickable w-full h-64 object-cover cursor-pointer" onerror="this.onerror=null;this.src='https://placehold.co/400x500/cccccc/ffffff?text=Image+Not+Found';">
                         <div class="p-4 flex flex-col flex-grow">
                             <div class="flex justify-between items-start">
                                 <h3 class="text-lg font-semibold">${product.name}</h3>
@@ -140,7 +143,7 @@
                             <div class="mt-auto pt-4">
                                 <div class="mb-2">
                                     <select class="product-variant w-full p-2 border border-gray-300 rounded-md" ${!hasVariants ? 'disabled' : ''}>
-                                        ${hasVariants ? variantOptions : '<option>Not Available</option>'}
+                                        ${hasVariants ? variantOptions : '<option value="">Not Available</option>'}
                                     </select>
                                 </div>
                                 <div class="grid grid-cols-2 gap-2 mb-2">
@@ -175,11 +178,17 @@
             
             function updateCart() {
                 let totalItems = 0; let totalPrice = 0; cartItemsContainer.innerHTML = '';
-                if (Object.keys(cart).length === 0) {
+                const isCartEmpty = Object.keys(cart).length === 0;
+
+                if (isCartEmpty) {
                     cartItemsContainer.innerHTML = '<p class="text-gray-500 text-center">Your cart is empty.</p>';
-                    checkoutButton.disabled = true; checkoutButton.classList.add('opacity-50', 'cursor-not-allowed');
+                    checkoutButton.disabled = true;
+                    checkoutButton.classList.add('opacity-50', 'cursor-not-allowed');
+                    clearCartBtn.style.display = 'none';
                 } else {
-                    checkoutButton.disabled = false; checkoutButton.classList.remove('opacity-50', 'cursor-not-allowed');
+                    checkoutButton.disabled = false;
+                    checkoutButton.classList.remove('opacity-50', 'cursor-not-allowed');
+                    clearCartBtn.style.display = 'block';
                     for (const cartItemId in cart) {
                         const item = cart[cartItemId]; totalItems += item.quantity; totalPrice += item.quantity * item.price;
                         const itemElement = document.createElement('div');
@@ -188,9 +197,18 @@
                         cartItemsContainer.appendChild(itemElement);
                     }
                 }
-                cartCount.textContent = totalItems; cartTotal.textContent = `₹${totalPrice.toFixed(2)}`;
+                cartCount.textContent = totalItems;
+                cartTotal.textContent = `₹${totalPrice.toFixed(2)}`;
             }
-            function showToast() { toast.classList.remove('opacity-0'); setTimeout(() => toast.classList.add('opacity-0'), 2000); }
+
+            function showToast() {
+                clearTimeout(toastTimer);
+                toast.classList.remove('opacity-0');
+                toastTimer = setTimeout(() => {
+                    toast.classList.add('opacity-0');
+                }, 2000);
+            }
+
             function toggleModal(modal, show) { if (show) modal.classList.add('is-open'); else modal.classList.remove('is-open'); }
             
             productGrid.addEventListener('click', (e) => {
@@ -199,6 +217,10 @@
                     const productId = e.target.dataset.productId;
                     const quantityInput = cardBody.querySelector('.quantity-input');
                     const category = cardBody.querySelector('.product-variant').value;
+                    if (!category) { // Prevent adding if "Not Available" is selected
+                        alert("This product is not available in any category.");
+                        return;
+                    }
                     const size = cardBody.querySelector('.product-size').value;
                     const color = cardBody.querySelector('.product-color').value;
                     const quantity = parseInt(quantityInput.value, 10);
@@ -211,16 +233,17 @@
                     }
                 }
                 if (e.target.classList.contains('product-variant')) {
+                    const selectedCategory = e.target.value;
+                    if (!selectedCategory) return; // Don't update price for "Not Available"
                     const cardBody = e.target.closest('.p-4');
                     const priceEl = cardBody.parentElement.querySelector('.product-price');
                     const productId = cardBody.querySelector('.add-to-cart-btn').dataset.productId;
                     const product = products.find(p => p.id == productId);
                     if (product && product.variants) {
-                        const newPrice = product.variants[e.target.value] || 0;
+                        const newPrice = product.variants[selectedCategory] || 0;
                         priceEl.textContent = `₹${newPrice.toFixed(2)}`;
                     }
                 }
-                // NEW: Handle image click
                 if (e.target.classList.contains('product-image-clickable')) {
                     fullViewImage.src = e.target.src;
                     toggleModal(imageViewerModal, true);
@@ -231,12 +254,15 @@
             viewCartButton.addEventListener('click', () => { updateCart(); toggleModal(cartModal, true); });
             checkoutButton.addEventListener('click', () => { toggleModal(cartModal, false); toggleModal(detailsModal, true); });
             document.querySelectorAll('.close-modal-btn').forEach(btn => btn.addEventListener('click', () => { toggleModal(cartModal, false); toggleModal(detailsModal, false); }));
-            
-            // NEW: Close image viewer listeners
             closeImageViewerBtn.addEventListener('click', () => toggleModal(imageViewerModal, false));
             imageViewerModal.addEventListener('click', (e) => { if (e.target === imageViewerModal) toggleModal(imageViewerModal, false); });
+            clearCartBtn.addEventListener('click', () => {
+                if (confirm("Are you sure you want to clear your entire cart?")) {
+                    cart = {};
+                    updateCart();
+                }
+            });
 
-            [cartModal, detailsModal].forEach(modal => modal.addEventListener('click', (e) => { if (e.target === modal) toggleModal(modal, false); }));
             sendWhatsappButton.addEventListener('click', () => {
                 if (!ownerDetailsForm.checkValidity()) { ownerDetailsForm.reportValidity(); return; }
                 const formData = new FormData(ownerDetailsForm); const ownerDetails = Object.fromEntries(formData.entries());
