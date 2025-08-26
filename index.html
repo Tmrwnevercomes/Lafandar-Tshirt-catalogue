@@ -61,11 +61,22 @@
     </div>
     <!-- Custom Alert Modal -->
     <div id="alert-modal" class="modal fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-        <div class="modal-content bg-white rounded-lg shadow-xl w-full max-w-md mx-auto">
+        <div class="modal-content bg-white rounded-lg shadow-xl w-full max-w-sm mx-auto">
             <div class="p-4 border-b"><h2 id="alert-title" class="text-xl font-semibold">Notice</h2></div>
             <div id="alert-message" class="p-6"></div>
             <div class="p-4 bg-gray-50 border-t flex justify-end">
                 <button id="alert-ok-btn" class="bg-indigo-600 text-white font-bold py-2 px-6 rounded-lg hover:bg-indigo-700 transition">OK</button>
+            </div>
+        </div>
+    </div>
+    <!-- Confirmation Modal -->
+    <div id="confirm-modal" class="modal fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+        <div class="modal-content bg-white rounded-lg shadow-xl w-full max-w-sm mx-auto">
+            <div class="p-4 border-b"><h2 id="confirm-title" class="text-xl font-semibold">Confirmation</h2></div>
+            <div id="confirm-message" class="p-6"></div>
+            <div class="p-4 bg-gray-50 border-t flex justify-end space-x-2">
+                <button id="confirm-cancel-btn" class="bg-gray-200 text-gray-800 font-bold py-2 px-4 rounded-lg hover:bg-gray-300">Cancel</button>
+                <button id="confirm-ok-btn" class="bg-red-500 text-white font-bold py-2 px-4 rounded-lg hover:bg-red-600">Confirm</button>
             </div>
         </div>
     </div>
@@ -92,6 +103,7 @@
             let products = [];
             let cart = {}; 
             let toastTimer;
+            let confirmCallback = null;
 
             function loadCart() { const savedCart = localStorage.getItem('tshirtCart'); if (savedCart) cart = JSON.parse(savedCart); }
             function saveCart() { localStorage.setItem('tshirtCart', JSON.stringify(cart)); }
@@ -102,6 +114,7 @@
             const detailsModal = document.getElementById('details-modal');
             const imageViewerModal = document.getElementById('image-viewer-modal');
             const alertModal = document.getElementById('alert-modal');
+            const confirmModal = document.getElementById('confirm-modal');
             const fullViewImage = document.getElementById('full-view-image');
             const closeImageViewerBtn = document.getElementById('close-image-viewer');
             const viewCartButton = document.getElementById('view-cart-button');
@@ -120,7 +133,19 @@
                 toggleModal(alertModal, true);
             }
 
+            function showConfirm(title, message, onConfirm) {
+                document.getElementById('confirm-title').textContent = title;
+                document.getElementById('confirm-message').innerHTML = message;
+                confirmCallback = onConfirm;
+                toggleModal(confirmModal, true);
+            }
+
             document.getElementById('alert-ok-btn').addEventListener('click', () => toggleModal(alertModal, false));
+            document.getElementById('confirm-ok-btn').addEventListener('click', () => {
+                if (confirmCallback) confirmCallback();
+                toggleModal(confirmModal, false);
+            });
+            document.getElementById('confirm-cancel-btn').addEventListener('click', () => toggleModal(confirmModal, false));
 
             async function fetchProducts() {
                 try {
@@ -206,6 +231,38 @@
                 }
             }
             
+            function updateStockDisplay(card) {
+                const productId = card.dataset.productId;
+                const product = products.find(p => p.id === productId);
+                if (!product) return;
+
+                const stockInfo = product.stockInfo || {};
+                const stockDisplay = card.querySelector('.stock-display');
+
+                const getSelected = (type) => Array.from(card.querySelectorAll(`input[data-type="${type}"]:checked`)).map(cb => cb.value);
+
+                const selectedVariants = getSelected('variant');
+                const selectedSizes = getSelected('size');
+                const selectedColors = getSelected('color');
+
+                if (selectedVariants.length === 1 && selectedSizes.length === 1 && selectedColors.length === 1) {
+                    const variant = selectedVariants[0];
+                    const size = selectedSizes[0];
+                    const color = selectedColors[0];
+
+                    const stockKey = `${variant}_${size}_${color}`;
+                    const cartItemId = `${productId}-${variant}-${size}-${color}`;
+
+                    const totalStock = stockInfo[stockKey] || 0;
+                    const quantityInCart = cart[cartItemId] ? cart[cartItemId].quantity : 0;
+                    const displayStock = totalStock - quantityInCart;
+
+                    stockDisplay.textContent = displayStock > 0 ? `${displayStock} in stock` : 'Out of stock';
+                } else {
+                    stockDisplay.textContent = '';
+                }
+            }
+
             productGrid.addEventListener('click', (e) => {
                 if (e.target.classList.contains('add-to-cart-btn')) {
                     const card = e.target.closest('[data-product-id]');
@@ -257,6 +314,7 @@
                     if (itemsAdded > 0) {
                         updateCart();
                         showToast();
+                        updateStockDisplay(card);
                     }
 
                     if (unavailableItems.length > 0) {
@@ -281,28 +339,10 @@
             productGrid.addEventListener('change', (e) => {
                 if (e.target.matches('input[type="checkbox"]')) {
                     const card = e.target.closest('[data-product-id]');
-                    const productId = card.dataset.productId;
-                    const product = products.find(p => p.id === productId);
-                    const stockInfo = product.stockInfo || {};
-                    const stockDisplay = card.querySelector('.stock-display');
-
-                    const getSelected = (type) => Array.from(card.querySelectorAll(`input[data-type="${type}"]:checked`)).map(cb => cb.value);
-
-                    const selectedVariants = getSelected('variant');
-                    const selectedSizes = getSelected('size');
-                    const selectedColors = getSelected('color');
-
-                    if (selectedVariants.length === 1 && selectedSizes.length === 1 && selectedColors.length === 1) {
-                        const stockKey = `${selectedVariants[0]}_${selectedSizes[0]}_${selectedColors[0]}`;
-                        const availableStock = stockInfo[stockKey] || 0;
-                        stockDisplay.textContent = availableStock > 0 ? `${availableStock} in stock` : 'Out of stock';
-                    } else {
-                        stockDisplay.textContent = '';
-                    }
+                    updateStockDisplay(card);
                 }
             });
 
-            // --- Unchanged Functions ---
             function updateCart() {
                 let totalItems = 0; let totalPrice = 0; cartItemsContainer.innerHTML = ''; const isCartEmpty = Object.keys(cart).length === 0;
                 if (isCartEmpty) { cartItemsContainer.innerHTML = '<p class="text-gray-500 text-center">Your cart is empty.</p>'; checkoutButton.disabled = true; checkoutButton.classList.add('opacity-50', 'cursor-not-allowed'); clearCartBtn.style.display = 'none'; } 
@@ -313,13 +353,37 @@
             }
             function showToast() { clearTimeout(toastTimer); toast.classList.remove('opacity-0'); toastTimer = setTimeout(() => { toast.classList.add('opacity-0'); }, 2000); }
             function toggleModal(modal, show) { if (show) modal.classList.add('is-open'); else modal.classList.remove('is-open'); }
-            cartItemsContainer.addEventListener('click', (e) => { if (e.target.classList.contains('remove-from-cart-btn')) { delete cart[e.target.dataset.cartItemId]; updateCart(); } });
+            
+            cartItemsContainer.addEventListener('click', (e) => { 
+                if (e.target.classList.contains('remove-from-cart-btn')) { 
+                    const cartItemId = e.target.dataset.cartItemId;
+                    delete cart[cartItemId]; 
+                    updateCart(); 
+                    const productId = cartItemId.split('-')[0];
+                    const card = document.querySelector(`[data-product-id="${productId}"]`);
+                    if (card) {
+                        updateStockDisplay(card);
+                    }
+                } 
+            });
+
             viewCartButton.addEventListener('click', () => { updateCart(); toggleModal(cartModal, true); });
             checkoutButton.addEventListener('click', () => { toggleModal(cartModal, false); toggleModal(detailsModal, true); });
-            document.querySelectorAll('.close-modal-btn').forEach(btn => btn.addEventListener('click', () => { toggleModal(cartModal, false); toggleModal(detailsModal, false); }));
+            document.querySelectorAll('.close-modal-btn').forEach(btn => btn.addEventListener('click', (e) => { 
+                const modal = e.target.closest('.modal');
+                if(modal) toggleModal(modal, false);
+            }));
             closeImageViewerBtn.addEventListener('click', () => toggleModal(imageViewerModal, false));
             imageViewerModal.addEventListener('click', (e) => { if (e.target === imageViewerModal) toggleModal(imageViewerModal, false); });
-            clearCartBtn.addEventListener('click', () => { if (window.confirm("Are you sure you want to clear your entire cart?")) { cart = {}; updateCart(); } });
+            
+            clearCartBtn.addEventListener('click', () => {
+                showConfirm("Clear Cart", "Are you sure you want to clear your entire cart?", () => {
+                    cart = {};
+                    updateCart();
+                    document.querySelectorAll('[data-product-id]').forEach(card => updateStockDisplay(card));
+                });
+            });
+
             sendWhatsappButton.addEventListener('click', () => { if (!ownerDetailsForm.checkValidity()) { ownerDetailsForm.reportValidity(); return; } const formData = new FormData(ownerDetailsForm); const ownerDetails = Object.fromEntries(formData.entries()); let message = `*New T-Shirt Order*\n\n*From:* ${ownerDetails.ownerName}\n*Shop:* ${ownerDetails.shopName}\n*Address:* ${ownerDetails.shopAddress}\n\n--- *Order Details* ---\n`; let totalPrice = 0; for (const cartItemId in cart) { const item = cart[cartItemId]; const itemTotal = item.quantity * item.price; totalPrice += itemTotal; message += `- *${item.name}* (${item.category}, ${item.size}, ${item.color})\n  *Qty:* ${item.quantity} x ₹${item.price.toFixed(2)} = *₹${itemTotal.toFixed(2)}*\n`; } message += `\n*GRAND TOTAL: ₹${totalPrice.toFixed(2)}*\n\nThank you!`; const whatsappUrl = `https://wa.me/${yourWhatsAppNumber}?text=${encodeURIComponent(message)}`; window.open(whatsappUrl, '_blank'); });
 
             loadCart();
