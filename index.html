@@ -101,8 +101,8 @@
                     
                     const hasVariants = product.variants && Object.keys(product.variants).length > 0;
                     const variantOptions = hasVariants ? Object.keys(product.variants).map(name => `<option value="${name}">${name}</option>`).join('') : '';
-                    const sizeOptions = product.sizes.map(size => `<option value="${size}">${size}</option>`).join('');
-                    const colorOptions = product.colors.map(color => `<option value="${color}">${color}</option>`).join('');
+                    const sizeOptions = (product.sizes || []).map(size => `<option value="${size}">${size}</option>`).join('');
+                    const colorOptions = (product.colors || []).map(color => `<option value="${color}">${color}</option>`).join('');
 
                     card.innerHTML = `
                         <img src="${product.imageUrl}" alt="${product.name}" loading="lazy" class="product-image-clickable w-full h-64 object-cover cursor-pointer">
@@ -139,7 +139,7 @@
                 const priceEl = cardElement.querySelector('.product-price');
                 const addBtn = cardElement.querySelector('.add-to-cart-btn');
 
-                priceEl.textContent = variant && product.variants[variant] ? `₹${(product.variants[variant]).toFixed(2)}` : '₹--.--';
+                priceEl.textContent = variant && product.variants && product.variants[variant] ? `₹${(product.variants[variant]).toFixed(2)}` : '₹--.--';
 
                 if (variant && size && color) {
                     const sku = `${variant}_${size}_${color}`.replace(/\s+/g, '_');
