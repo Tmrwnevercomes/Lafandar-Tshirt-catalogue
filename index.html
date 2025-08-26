@@ -1,59 +1,28 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>T-Shirt Brand Catalog</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-    <style>
-        body { font-family: 'Inter', sans-serif; }
-        .modal { opacity: 0; visibility: hidden; transition: opacity 300ms ease-out, visibility 0s 300ms; }
-        .modal.is-open { opacity: 1; visibility: visible; transition: opacity 300ms ease-out; }
-        .modal-content { transform: scale(0.95); transition: transform 300ms ease-out; }
-        .modal.is-open .modal-content { transform: scale(1); }
-        .loader { border: 4px solid #f3f3f3; border-top: 4px solid #4f46e5; border-radius: 50%; width: 40px; height: 40px; animation: spin 1s linear infinite; }
-        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
-    </style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>T-Shirt Catalog</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    body { font-family: 'Inter', sans-serif; }
+  </style>
 </head>
-<body class="bg-gray-100 text-gray-800">
+<body class="bg-gray-100">
+  <div class="container mx-auto p-6">
+    <h1 class="text-3xl font-bold text-center mb-6">Our T-Shirt Designs</h1>
+    <div id="catalog" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6"></div>
+  </div>
 
-    <div class="container mx-auto p-4 sm:p-6 lg:p-8">
-        <header class="text-center mb-8">
-            <h1 class="text-4xl font-bold text-gray-900">T-Shirt Catalog</h1>
-            <p class="text-lg text-gray-600 mt-2">Select your options to view stock and add to cart.</p>
-        </header>
+  <!-- Firebase -->
+  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
 
-        <div id="product-grid" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
-            <div id="loading" class="col-span-full flex justify-center items-center h-64"><div class="loader"></div></div>
-        </div>
-        
-    </div>
-    
-    <!-- Modals -->
-    <div id="cart-modal" class="modal fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-        <div class="modal-content bg-white rounded-lg shadow-xl w-full max-w-lg mx-auto">
-            <div class="p-4 border-b flex justify-between items-center"><h2 class="text-2xl font-semibold">Your Order</h2><button class="close-modal-btn text-gray-500 hover:text-gray-800 text-3xl leading-none" aria-label="Close">&times;</button></div>
-            <div id="cart-items" class="p-6 max-h-80 overflow-y-auto"></div>
-            <div class="p-4 bg-gray-50 border-t flex justify-between items-center">
-                <div><p class="text-lg font-semibold">Total: <span id="cart-total">₹0.00</span></p><button id="clear-cart-btn" class="text-xs text-red-500 hover:text-red-700 font-medium mt-1" style="display: none;">Clear Cart</button></div>
-                <button id="checkout-button" class="bg-green-500 text-white font-bold py-2 px-6 rounded-lg hover:bg-green-600 transition">Proceed to Checkout</button>
-            </div>
-        </div>
-    </div>
-    <div id="details-modal" class="modal fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-        <div class="modal-content bg-white rounded-lg shadow-xl w-full max-w-md mx-auto"><div class="p-4 border-b flex justify-between items-center"><h2 class="text-2xl font-semibold">Your Details</h2><button class="close-modal-btn text-gray-500 hover:text-gray-800 text-3xl leading-none" aria-label="Close">&times;</button></div><div class="p-6"><form id="owner-details-form"><div class="mb-4"><label for="shop-name" class="block text-sm font-medium text-gray-700 mb-1">Shop Name</label><input type="text" id="shop-name" name="shopName" class="w-full p-2 border border-gray-300 rounded-md" required></div><div class="mb-4"><label for="owner-name" class="block text-sm font-medium text-gray-700 mb-1">Your Name</label><input type="text" id="owner-name" name="ownerName" class="w-full p-2 border border-gray-300 rounded-md" required></div><div class="mb-4"><label for="shop-address" class="block text-sm font-medium text-gray-700 mb-1">Shop Address</label><textarea id="shop-address" name="shopAddress" rows="3" class="w-full p-2 border border-gray-300 rounded-md" required></textarea></div></form></div><div class="p-4 bg-gray-50 border-t flex justify-end"><button id="send-whatsapp-button" class="bg-green-500 text-white font-bold py-2 px-6 rounded-lg hover:bg-green-600 transition">Confirm & Send Order</button></div></div>
-    </div>
-    <div id="image-viewer-modal" class="modal fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center p-4 z-50">
-        <div class="relative max-w-4xl max-h-full"><button id="close-image-viewer" class="absolute -top-3 -right-3 text-white bg-black bg-opacity-50 rounded-full h-8 w-8 flex items-center justify-center text-2xl z-10" aria-label="Close">&times;</button><img id="full-view-image" src="" alt="Full view" class="max-w-full max-h-screen object-contain rounded-lg"></div>
-    </div>
-    <div id="toast" class="fixed top-5 right-5 bg-green-500 text-white py-2 px-4 rounded-lg shadow-md opacity-0 transition-opacity duration-300 z-50">Item(s) added to cart!</div>
-
-    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
-
-    <script>
-        const firebaseConfig = {
+  <script>
+    // 🔹 Firebase Config (same as in admin.html)
+    const firebaseConfig = {
   apiKey: "AIzaSyAuO5iyXCHYZS9nS2BViu-259sb2CUSZjo",
   authDomain: "tshirt-catalog-v2.firebaseapp.com",
   projectId: "tshirt-catalog-v2",
@@ -62,178 +31,41 @@
   appId: "1:428518895959:web:8e1fccd4d6f1e2c8b00e12"
 };
 
-        if (firebaseConfig.apiKey === "YOUR_API_KEY") {
-            document.getElementById('product-grid').innerHTML = `<div class="col-span-full p-8 text-center bg-red-100 border border-red-400 text-red-700 rounded-lg"><h2 class="text-2xl font-bold mb-4">Configuration Error</h2><p>The Firebase configuration is missing or incorrect.</p></div>`;
-            throw new Error("Firebase configuration is not set.");
-        }
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.firestore();
+    const catalog = document.getElementById('catalog');
 
-        firebase.initializeApp(firebaseConfig);
-        const db = firebase.firestore();
+    // 🔹 Load Products
+    db.collection('products').onSnapshot(snapshot => {
+      catalog.innerHTML = '';
+      if (snapshot.empty) {
+        catalog.innerHTML = `<p class="text-center text-gray-500 col-span-full">No products available.</p>`;
+        return;
+      }
 
-        document.addEventListener('DOMContentLoaded', () => {
-            const yourWhatsAppNumber = '918210746035'; 
-            let products = [];
-            let cart = {}; 
-            let toastTimer;
+      snapshot.forEach(doc => {
+        const product = doc.data();
+        const el = document.createElement('div');
+        el.className = "bg-white shadow rounded-lg p-4 hover:shadow-lg transition";
 
-            const productGrid = document.getElementById('product-grid');
-            const loadingSpinner = document.getElementById('loading');
-            
-            function loadCart() { const savedCart = localStorage.getItem('tshirtCart'); if (savedCart) cart = JSON.parse(savedCart); }
-            function saveCart() { localStorage.setItem('tshirtCart', JSON.stringify(cart)); }
+        el.innerHTML = `
+          <img src="${product.imageUrl}" alt="${product.name}" 
+               class="w-full h-48 object-cover rounded mb-3"
+               onerror="this.onerror=null;this.src='https://placehold.co/300x200?text=No+Image';">
+          <h2 class="text-lg font-bold">${product.name}</h2>
+          <p class="text-sm text-gray-500 mt-1">Sizes: ${(product.sizes || []).join(", ")}</p>
+          <p class="text-sm text-gray-500">Colors: ${(product.colors || []).join(", ")}</p>
+          <p class="text-sm font-medium mt-2">Stock: ${product.stock ?? 0}</p>
+          ${
+            (product.stock ?? 0) > 0 
+              ? `<button class="bg-indigo-600 text-white px-4 py-2 rounded mt-3 w-full">Buy Now</button>` 
+              : `<span class="text-red-500 font-bold mt-3 block text-center">Out of Stock</span>`
+          }
+        `;
 
-            async function fetchProducts() {
-                try {
-                    const snapshot = await db.collection('products').orderBy("name").get();
-                    if (snapshot.empty) { productGrid.innerHTML = '<p class="col-span-full text-center text-gray-500">No designs have been added yet.</p>'; return; }
-                    snapshot.forEach(doc => products.push({ id: doc.id, ...doc.data() }));
-                    renderProducts();
-                } catch (error) { console.error("Error fetching products: ", error); productGrid.innerHTML = '<p class="col-span-full text-center text-red-500">Could not load designs. Please check security rules.</p>'; } 
-                finally { if (loadingSpinner) loadingSpinner.style.display = 'none'; }
-            }
-
-            function renderProducts() {
-                productGrid.innerHTML = '';
-                products.forEach(product => {
-                    const card = document.createElement('div');
-                    card.className = 'product-card bg-white rounded-lg shadow-md overflow-hidden flex flex-col';
-                    card.dataset.productId = product.id;
-                    
-                    const hasVariants = product.variants && Object.keys(product.variants).length > 0;
-                    const variantOptions = hasVariants ? Object.keys(product.variants).map(name => `<option value="${name}">${name}</option>`).join('') : '';
-                    const sizeOptions = (product.sizes || []).map(size => `<option value="${size}">${size}</option>`).join('');
-                    const colorOptions = (product.colors || []).map(color => `<option value="${color}">${color}</option>`).join('');
-
-                    card.innerHTML = `
-                        <img src="${product.imageUrl}" alt="${product.name}" loading="lazy" class="product-image-clickable w-full h-64 object-cover cursor-pointer">
-                        <div class="p-4 flex flex-col flex-grow">
-                            <h3 class="text-lg font-semibold">${product.name}</h3>
-                            <p class="product-price text-lg font-bold text-gray-800 mb-2">₹--.--</p>
-                            <div class="space-y-2 mt-auto pt-2">
-                                <select class="product-variant w-full p-2 border border-gray-300 rounded-md"><option value="">Select Category</option>${variantOptions}</select>
-                                <div class="grid grid-cols-2 gap-2">
-                                    <select class="product-size w-full p-2 border border-gray-300 rounded-md"><option value="">Select Size</option>${sizeOptions}</select>
-                                    <select class="product-color w-full p-2 border border-gray-300 rounded-md"><option value="">Select Color</option>${colorOptions}</select>
-                                </div>
-                                <div class="stock-info text-sm font-medium text-center h-5"></div>
-                            </div>
-                            <div class="flex items-center space-x-2 border-t pt-3 mt-3">
-                                <input type="number" min="1" value="1" class="quantity-input w-20 p-2 border border-gray-300 rounded-md text-center">
-                                <button class="add-to-cart-btn flex-1 bg-indigo-500 text-white font-semibold py-2 px-4 rounded-md hover:bg-indigo-600 transition disabled:opacity-50 disabled:cursor-not-allowed" disabled>Add to Cart</button>
-                            </div>
-                        </div>
-                    `;
-                    productGrid.appendChild(card);
-                });
-            }
-
-            function updateStockDisplay(cardElement) {
-                const productId = cardElement.dataset.productId;
-                const product = products.find(p => p.id === productId);
-                if (!product) return;
-
-                const variant = cardElement.querySelector('.product-variant').value;
-                const size = cardElement.querySelector('.product-size').value;
-                const color = cardElement.querySelector('.product-color').value;
-                const stockInfo = cardElement.querySelector('.stock-info');
-                const priceEl = cardElement.querySelector('.product-price');
-                const addBtn = cardElement.querySelector('.add-to-cart-btn');
-
-                priceEl.textContent = variant && product.variants && product.variants[variant] ? `₹${(product.variants[variant]).toFixed(2)}` : '₹--.--';
-
-                if (variant && size && color) {
-                    const sku = `${variant}_${size}_${color}`.replace(/\s+/g, '_');
-                    const stock = product.inventory ? (product.inventory[sku] || 0) : 0;
-                    
-                    if (stock > 0) {
-                        stockInfo.textContent = `${stock} in stock`;
-                        stockInfo.className = 'stock-info text-sm font-medium text-center h-5 text-green-600';
-                        addBtn.disabled = false;
-                    } else {
-                        stockInfo.textContent = 'Out of Stock';
-                        stockInfo.className = 'stock-info text-sm font-medium text-center h-5 text-red-500';
-                        addBtn.disabled = true;
-                    }
-                } else {
-                    stockInfo.textContent = '';
-                    addBtn.disabled = true;
-                }
-            }
-            
-            productGrid.addEventListener('change', (e) => {
-                if (e.target.matches('.product-variant, .product-size, .product-color')) {
-                    updateStockDisplay(e.target.closest('.product-card'));
-                }
-            });
-
-            productGrid.addEventListener('click', (e) => {
-                if (e.target.classList.contains('add-to-cart-btn')) {
-                    const card = e.target.closest('.product-card');
-                    const productId = card.dataset.productId;
-                    const quantity = parseInt(card.querySelector('.quantity-input').value, 10);
-                    const category = card.querySelector('.product-variant').value;
-                    const size = card.querySelector('.product-size').value;
-                    const color = card.querySelector('.product-color').value;
-
-                    if (isNaN(quantity) || quantity < 1) { alert("Please enter a valid quantity."); return; }
-                    
-                    const product = products.find(p => p.id === productId);
-                    const sku = `${category}_${size}_${color}`.replace(/\s+/g, '_');
-                    const stock = product.inventory ? (product.inventory[sku] || 0) : 0;
-
-                    if (quantity > stock) {
-                        alert(`Only ${stock} items available for this selection.`);
-                        return;
-                    }
-
-                    addToCart(productId, category, quantity, size, color);
-                }
-                if (e.target.classList.contains('product-image-clickable')) {
-                    document.getElementById('full-view-image').src = e.target.src;
-                    toggleModal(document.getElementById('image-viewer-modal'), true);
-                }
-            });
-            
-            function addToCart(productId, category, quantity, size, color) {
-                const product = products.find(p => p.id == productId);
-                if (!product) return;
-                const price = product.variants[category] || 0;
-                const cartItemId = `${productId}-${category}-${size}-${color}`;
-                if (cart[cartItemId]) { cart[cartItemId].quantity += quantity; } 
-                else { cart[cartItemId] = { name: product.name, category, quantity, size, color, price }; }
-                updateCart();
-                showToast();
-            }
-
-            function updateCart() {
-                const cartItemsContainer = document.getElementById('cart-items');
-                const cartCount = document.getElementById('cart-count');
-                const cartTotal = document.getElementById('cart-total');
-                const clearCartBtn = document.getElementById('clear-cart-btn');
-                const checkoutButton = document.getElementById('checkout-button');
-                let totalItems = 0; let totalPrice = 0; cartItemsContainer.innerHTML = ''; const isCartEmpty = Object.keys(cart).length === 0;
-                if (isCartEmpty) { cartItemsContainer.innerHTML = '<p class="text-gray-500 text-center">Your cart is empty.</p>'; checkoutButton.disabled = true; checkoutButton.classList.add('opacity-50', 'cursor-not-allowed'); clearCartBtn.style.display = 'none'; } 
-                else { checkoutButton.disabled = false; checkoutButton.classList.remove('opacity-50', 'cursor-not-allowed'); clearCartBtn.style.display = 'block';
-                    for (const cartItemId in cart) { const item = cart[cartItemId]; totalItems += item.quantity; totalPrice += item.quantity * item.price; const itemElement = document.createElement('div'); itemElement.className = 'flex justify-between items-center py-3 border-b'; itemElement.innerHTML = `<div><p class="font-semibold">${item.name} <span class="text-sm text-gray-500">(${item.category}, ${item.size}, ${item.color})</span></p><p class="text-sm text-gray-600">Qty: ${item.quantity} x ₹${item.price.toFixed(2)}</p></div><div class="text-right"><p class="font-semibold">₹${(item.quantity * item.price).toFixed(2)}</p><button class="remove-from-cart-btn text-xs text-red-500 hover:text-red-700 font-medium" data-cart-item-id="${cartItemId}">Remove</button></div>`; cartItemsContainer.appendChild(itemElement); }
-                }
-                cartCount.textContent = totalItems; cartTotal.textContent = `₹${totalPrice.toFixed(2)}`; saveCart();
-            }
-
-            function showToast() { clearTimeout(toastTimer); const toast = document.getElementById('toast'); toast.classList.remove('opacity-0'); toastTimer = setTimeout(() => { toast.classList.add('opacity-0'); }, 2000); }
-            function toggleModal(modal, show) { if (show) modal.classList.add('is-open'); else modal.classList.remove('is-open'); }
-            
-            document.getElementById('cart-items').addEventListener('click', (e) => { if (e.target.classList.contains('remove-from-cart-btn')) { delete cart[e.target.dataset.cartItemId]; updateCart(); } });
-            document.getElementById('view-cart-button').addEventListener('click', () => { updateCart(); toggleModal(document.getElementById('cart-modal'), true); });
-            document.getElementById('checkout-button').addEventListener('click', () => { toggleModal(document.getElementById('cart-modal'), false); toggleModal(document.getElementById('details-modal'), true); });
-            document.querySelectorAll('.close-modal-btn').forEach(btn => btn.addEventListener('click', (e) => { const modal = e.target.closest('.modal'); if(modal) toggleModal(modal, false); }));
-            document.getElementById('image-viewer-modal').addEventListener('click', (e) => { if (e.target === document.getElementById('image-viewer-modal')) toggleModal(document.getElementById('image-viewer-modal'), false); });
-            document.getElementById('clear-cart-btn').addEventListener('click', () => { if (confirm("Are you sure you want to clear your entire cart?")) { cart = {}; updateCart(); } });
-            document.getElementById('send-whatsapp-button').addEventListener('click', () => { const ownerDetailsForm = document.getElementById('owner-details-form'); if (!ownerDetailsForm.checkValidity()) { ownerDetailsForm.reportValidity(); return; } const formData = new FormData(ownerDetailsForm); const ownerDetails = Object.fromEntries(formData.entries()); let message = `*New T-Shirt Order*\n\n*From:* ${ownerDetails.ownerName}\n*Shop:* ${ownerDetails.shopName}\n*Address:* ${ownerDetails.shopAddress}\n\n--- *Order Details* ---\n`; let totalPrice = 0; for (const cartItemId in cart) { const item = cart[cartItemId]; const itemTotal = item.quantity * item.price; totalPrice += itemTotal; message += `- *${item.name}* (${item.category}, ${item.size}, ${item.color})\n  *Qty:* ${item.quantity} x ₹${item.price.toFixed(2)} = *₹${itemTotal.toFixed(2)}*\n`; } message += `\n*GRAND TOTAL: ₹${totalPrice.toFixed(2)}*\n\nThank you!`; const whatsappUrl = `https://wa.me/${yourWhatsAppNumber}?text=${encodeURIComponent(message)}`; window.open(whatsappUrl, '_blank'); });
-
-            loadCart();
-            updateCart();
-            fetchProducts();
-        });
-    </script>
+        catalog.appendChild(el);
+      });
+    });
+  </script>
 </body>
 </html>
