@@ -44,7 +44,7 @@
     <div id="admin-panel" class="container mx-auto p-4 sm:p-6 lg:p-8" style="display: none;">
         <header class="flex flex-col sm:flex-row justify-between items-center mb-8 gap-4">
             <div>
-                <h1 class="text-3xl font-bold text-gray-900">Manage Designs & Stock</h1>
+                <h1 class="text-3xl font-bold text-gray-900">Manage Designs</h1>
                 <p id="user-email" class="text-sm text-gray-500"></p>
             </div>
             <div>
@@ -57,8 +57,89 @@
     </div>
 
     <!-- Product Modal -->
-    <div id="product-modal" class="modal fixed inset-0 bg-black bg-opacity-50 items-center justify-center p-4 z-50">
-        <div class="bg-white rounded-lg shadow-xl w-full max-w-4xl mx-auto"><form id="product-form" class="p-6"><h2 id="modal-title" class="text-2xl font-semibold mb-6">Add/Edit Design</h2><input type="hidden" id="product-id"><input type="hidden" id="existing-image-url"><div class="grid grid-cols-1 md:grid-cols-2 gap-6"><div class="space-y-4"><div><label for="product-name" class="block text-sm font-medium text-gray-700 mb-1">Design Name</label><input type="text" id="product-name" class="w-full p-2 border border-gray-300 rounded-md" required></div><div><label for="product-image-file" class="block text-sm font-medium text-gray-700 mb-1">Product Image</label><input type="file" id="product-image-file" class="w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-indigo-50 file:text-indigo-700 hover:file:bg-indigo-100" accept="image/png, image/jpeg, image/webp"><p class="text-xs text-gray-500 mt-1">Leave blank to keep existing image.</p></div><div id="upload-progress-container" class="mb-4" style="display: none;"><div class="progress-bar"><div id="upload-progress-bar" class="progress-bar-fill" style="width: 0%;"></div></div></div></div><div class="bg-gray-50 p-4 rounded-lg"><h3 class="text-lg font-semibold mb-3">Inventory & Stock Management</h3><div class="grid grid-cols-2 sm:grid-cols-4 gap-3 items-end p-3 border rounded-md mb-4 bg-white"><div class="col-span-2 sm:col-span-1"><label for="stock-variant" class="text-xs font-medium text-gray-600">Variant</label><select id="stock-variant" class="w-full p-2 border border-gray-300 rounded-md mt-1 text-sm"></select></div><div><label for="stock-size" class="text-xs font-medium text-gray-600">Size</label><input type="text" id="stock-size" placeholder="e.g. M" class="w-full p-2 border border-gray-300 rounded-md mt-1 text-sm"></div><div><label for="stock-color" class="text-xs font-medium text-gray-600">Color</label><input type="text" id="stock-color" placeholder="e.g. Black" class="w-full p-2 border border-gray-300 rounded-md mt-1 text-sm"></div><div><label for="stock-quantity" class="text-xs font-medium text-gray-600">Quantity</label><input type="number" id="stock-quantity" placeholder="0" min="0" class="w-full p-2 border border-gray-300 rounded-md mt-1 text-sm"></div><div class="col-span-full"><button type="button" id="add-stock-btn" class="w-full bg-indigo-500 text-white font-bold py-2 px-4 rounded-lg hover:bg-indigo-600 text-sm mt-2">Add / Update Stock</button></div></div><p id="stock-error" class="text-xs text-red-500 my-2 text-center" style="display: none;">Please add at least one item to stock.</p><div id="stock-list" class="max-h-48 overflow-y-auto space-y-2"></div></div></div><div class="pt-6 border-t mt-6 flex justify-end space-x-2"><button type="button" class="cancel-btn bg-gray-200 text-gray-800 font-bold py-2 px-4 rounded-lg hover:bg-gray-300">Cancel</button><button type="submit" id="save-btn" class="bg-green-500 text-white font-bold py-2 px-4 rounded-lg hover:bg-green-600">Save Design</button></div></form></div>
+    <div id="product-modal" class="modal fixed inset-0 bg-black bg-opacity-50 items-center justify-center p-4 z-50 overflow-y-auto">
+        <div class="bg-white rounded-lg shadow-xl w-full max-w-4xl mx-auto my-8">
+            <form id="product-form" class="p-6">
+                <h2 id="modal-title" class="text-2xl font-semibold mb-6">Add/Edit Design</h2>
+                <input type="hidden" id="product-id">
+                <input type="hidden" id="existing-image-url">
+                
+                <!-- Original Settings Section -->
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6 border-b pb-6 mb-6">
+                    <div>
+                        <h3 class="text-lg font-semibold mb-3 text-gray-800">Design Details</h3>
+                        <div class="space-y-4">
+                            <div>
+                                <label for="product-name" class="block text-sm font-medium text-gray-700 mb-1">Design Name</label>
+                                <input type="text" id="product-name" class="w-full p-2 border border-gray-300 rounded-md" required>
+                            </div>
+                            <div>
+                                <label for="product-image-file" class="block text-sm font-medium text-gray-700 mb-1">Product Image</label>
+                                <input type="file" id="product-image-file" class="w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-indigo-50 file:text-indigo-700 hover:file:bg-indigo-100" accept="image/png, image/jpeg, image/webp">
+                                <p class="text-xs text-gray-500 mt-1">Leave blank to keep existing image.</p>
+                            </div>
+                            <div id="upload-progress-container" class="mb-4" style="display: none;">
+                                <div class="progress-bar"><div id="upload-progress-bar" class="progress-bar-fill" style="width: 0%;"></div></div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="bg-gray-50 p-4 rounded-lg">
+                        <h3 class="text-lg font-semibold mb-3">Product Variants & Options</h3>
+                        <div class="space-y-4">
+                             <div>
+                                <label for="product-sizes" class="block text-sm font-medium text-gray-700 mb-1">Available Sizes (comma-separated)</label>
+                                <input type="text" id="product-sizes" placeholder="e.g. S, M, L, XL" class="w-full p-2 border border-gray-300 rounded-md" required>
+                            </div>
+                            <div>
+                                <label for="product-colors" class="block text-sm font-medium text-gray-700 mb-1">Available Colors (comma-separated)</label>
+                                <input type="text" id="product-colors" placeholder="e.g. Black, White, Navy" class="w-full p-2 border border-gray-300 rounded-md" required>
+                            </div>
+                            <div>
+                                <h4 class="text-sm font-medium text-gray-700 mb-2">Assign Variants</h4>
+                                <div id="variant-list" class="mb-2 max-h-24 overflow-y-auto space-y-2"></div>
+                                <div class="flex gap-2 items-end border-t pt-3">
+                                    <select id="global-variant-select" class="w-full p-2 border border-gray-300 rounded-md"></select>
+                                    <button type="button" id="add-variant-btn" class="bg-indigo-500 text-white font-bold py-2 px-3 rounded-lg hover:bg-indigo-600 text-sm">Add</button>
+                                </div>
+                                <p id="variant-error" class="text-xs text-red-500 mt-1" style="display: none;">Please add at least one variant.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- NEW: Inventory Management Section -->
+                <div class="bg-gray-50 p-4 rounded-lg">
+                    <h3 class="text-lg font-semibold mb-3">Inventory & Stock Management</h3>
+                    <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 items-end p-3 border rounded-md mb-4 bg-white">
+                        <div class="col-span-2 sm:col-span-1">
+                            <label for="stock-variant" class="text-xs font-medium text-gray-600">Variant</label>
+                            <select id="stock-variant" class="w-full p-2 border border-gray-300 rounded-md mt-1 text-sm"></select>
+                        </div>
+                        <div>
+                            <label for="stock-size" class="text-xs font-medium text-gray-600">Size</label>
+                            <select id="stock-size" class="w-full p-2 border border-gray-300 rounded-md mt-1 text-sm"></select>
+                        </div>
+                        <div>
+                            <label for="stock-color" class="text-xs font-medium text-gray-600">Color</label>
+                            <select id="stock-color" class="w-full p-2 border border-gray-300 rounded-md mt-1 text-sm"></select>
+                        </div>
+                        <div>
+                            <label for="stock-quantity" class="text-xs font-medium text-gray-600">Quantity</label>
+                            <input type="number" id="stock-quantity" placeholder="0" min="0" class="w-full p-2 border border-gray-300 rounded-md mt-1 text-sm">
+                        </div>
+                        <div class="col-span-full">
+                            <button type="button" id="add-stock-btn" class="w-full bg-indigo-500 text-white font-bold py-2 px-4 rounded-lg hover:bg-indigo-600 text-sm mt-2">Add / Update Stock</button>
+                        </div>
+                    </div>
+                    <div id="stock-list" class="max-h-48 overflow-y-auto space-y-2"></div>
+                </div>
+
+                <div class="pt-6 border-t mt-6 flex justify-end space-x-2">
+                    <button type="button" class="cancel-btn bg-gray-200 text-gray-800 font-bold py-2 px-4 rounded-lg hover:bg-gray-300">Cancel</button>
+                    <button type="submit" id="save-btn" class="bg-green-500 text-white font-bold py-2 px-4 rounded-lg hover:bg-green-600">Save Design</button>
+                </div>
+            </form>
+        </div>
     </div>
 
     <!-- Global Variant Modal -->
@@ -89,6 +170,7 @@
         const globalVariantsRef = db.collection('settings').doc('globalVariants');
 
         let globalVariants = {};
+        let currentProductVariants = {};
         // NEW: This object will hold the stock data for the product being edited
         let currentProductStock = {};
 
@@ -130,13 +212,17 @@
                 const manageGlobalVariantsBtn = document.getElementById('manage-global-variants-btn');
                 const addNewBtn = document.getElementById('add-new-btn');
                 const saveBtn = document.getElementById('save-btn');
+                const globalVariantSelect = document.getElementById('global-variant-select');
+                const variantListDiv = document.getElementById('variant-list');
+                const addVariantBtn = document.getElementById('add-variant-btn');
 
                 // NEW: Stock management UI elements
                 const stockVariantSelect = document.getElementById('stock-variant');
+                const stockSizeSelect = document.getElementById('stock-size');
+                const stockColorSelect = document.getElementById('stock-color');
                 const stockListDiv = document.getElementById('stock-list');
                 const addStockBtn = document.getElementById('add-stock-btn');
 
-                // --- GLOBAL VARIANTS LOGIC ---
                 async function loadGlobalVariants() {
                     try {
                         const doc = await globalVariantsRef.get();
@@ -148,20 +234,54 @@
 
                 function updateGlobalVariantUI() {
                     const globalVariantListDiv = document.getElementById('global-variant-list');
-                    stockVariantSelect.innerHTML = ''; 
+                    globalVariantSelect.innerHTML = '';
                     globalVariantListDiv.innerHTML = '';
                     for (const name in globalVariants) {
                         const price = globalVariants[name];
-                        // Populate dropdown in product modal
                         const option = document.createElement('option');
                         option.value = name; option.textContent = `${name} - ₹${price}`;
-                        stockVariantSelect.appendChild(option);
-                        // Populate list in global variants management modal
+                        globalVariantSelect.appendChild(option);
                         const itemEl = document.createElement('div');
                         itemEl.className = 'list-item flex items-center justify-between p-2 border-b';
                         itemEl.innerHTML = `<span>${name} - ₹${price}</span><button class="delete-global-variant-btn bg-red-500 text-white text-xs font-bold py-1 px-2 rounded hover:bg-red-600" data-name="${name}">Delete</button>`;
                         globalVariantListDiv.appendChild(itemEl);
                     }
+                }
+                
+                function renderCurrentProductVariants() {
+                    variantListDiv.innerHTML = '';
+                    stockVariantSelect.innerHTML = '<option value="">Select Variant</option>'; // Reset stock variant dropdown
+                    if (Object.keys(currentProductVariants).length === 0) { 
+                        variantListDiv.innerHTML = '<p class="text-sm text-gray-500 text-center">No variants added yet.</p>'; 
+                    }
+                    for (const name in currentProductVariants) {
+                        const price = currentProductVariants[name];
+                        const itemEl = document.createElement('div');
+                        itemEl.className = 'flex items-center justify-between bg-white p-2 rounded';
+                        itemEl.innerHTML = `<p class="text-sm font-medium">${name} - ₹${price}</p><button type="button" class="delete-variant-btn text-red-500 hover:text-red-700 text-xs font-bold" data-name="${name}">Remove</button>`;
+                        variantListDiv.appendChild(itemEl);
+
+                        // Populate stock variant dropdown with assigned variants
+                        const option = document.createElement('option');
+                        option.value = name;
+                        option.textContent = name;
+                        stockVariantSelect.appendChild(option);
+                    }
+                }
+
+                function updateStockDropdowns() {
+                    const sizes = document.getElementById('product-sizes').value.split(',').map(s => s.trim()).filter(Boolean);
+                    const colors = document.getElementById('product-colors').value.split(',').map(c => c.trim()).filter(Boolean);
+                    
+                    stockSizeSelect.innerHTML = '<option value="">Select Size</option>';
+                    sizes.forEach(size => {
+                        stockSizeSelect.innerHTML += `<option value="${size}">${size}</option>`;
+                    });
+
+                    stockColorSelect.innerHTML = '<option value="">Select Color</option>';
+                    colors.forEach(color => {
+                        stockColorSelect.innerHTML += `<option value="${color}">${color}</option>`;
+                    });
                 }
                 
                 // --- NEW: STOCK MANAGEMENT LOGIC ---
@@ -171,10 +291,7 @@
                         stockListDiv.innerHTML = '<p class="text-sm text-gray-500 text-center">No stock entries added.</p>';
                         return;
                     }
-
-                    // Sort for consistent display
                     const sortedVariants = Object.keys(currentProductStock).sort();
-
                     for (const variant of sortedVariants) {
                         const sizes = currentProductStock[variant];
                         const sortedSizes = Object.keys(sizes).sort();
@@ -197,8 +314,8 @@
 
                 addStockBtn.addEventListener('click', () => {
                     const variant = stockVariantSelect.value;
-                    const size = document.getElementById('stock-size').value.trim().toUpperCase();
-                    const color = document.getElementById('stock-color').value.trim();
+                    const size = stockSizeSelect.value;
+                    const color = stockColorSelect.value;
                     const quantity = parseInt(document.getElementById('stock-quantity').value, 10);
 
                     if (!variant || !size || !color || isNaN(quantity)) {
@@ -206,19 +323,11 @@
                         return;
                     }
 
-                    // Create nested objects if they don't exist
-                    if (!currentProductStock[variant]) {
-                        currentProductStock[variant] = {};
-                    }
-                    if (!currentProductStock[variant][size]) {
-                        currentProductStock[variant][size] = {};
-                    }
+                    if (!currentProductStock[variant]) currentProductStock[variant] = {};
+                    if (!currentProductStock[variant][size]) currentProductStock[variant][size] = {};
                     currentProductStock[variant][size][color] = quantity;
 
                     renderStockList();
-                    // Clear inputs for next entry
-                    document.getElementById('stock-size').value = '';
-                    document.getElementById('stock-color').value = '';
                     document.getElementById('stock-quantity').value = '';
                 });
 
@@ -226,36 +335,35 @@
                     if (e.target.classList.contains('delete-stock-btn')) {
                         const { variant, size, color } = e.target.dataset;
                         delete currentProductStock[variant][size][color];
-                        // Clean up empty objects
-                        if (Object.keys(currentProductStock[variant][size]).length === 0) {
-                            delete currentProductStock[variant][size];
-                        }
-                        if (Object.keys(currentProductStock[variant]).length === 0) {
-                            delete currentProductStock[variant];
-                        }
+                        if (Object.keys(currentProductStock[variant][size]).length === 0) delete currentProductStock[variant][size];
+                        if (Object.keys(currentProductStock[variant]).length === 0) delete currentProductStock[variant];
                         renderStockList();
                     }
                 });
 
-                // --- PRODUCT MODAL & DATA LOGIC ---
                 function openProductModal(product = null) {
                     productForm.reset(); 
                     document.getElementById('upload-progress-container').style.display = 'none'; 
                     saveBtn.disabled = false; 
-                    currentProductStock = {}; // Reset stock for the modal
+                    currentProductVariants = {};
+                    currentProductStock = {};
 
                     if (product) {
                         document.getElementById('modal-title').textContent = 'Edit Design';
                         document.getElementById('product-id').value = product.id;
                         document.getElementById('product-name').value = product.name;
                         document.getElementById('existing-image-url').value = product.imageUrl;
-                        // Deep copy stock object to avoid modifying original data until save
+                        document.getElementById('product-sizes').value = product.sizes ? product.sizes.join(', ') : '';
+                        document.getElementById('product-colors').value = product.colors ? product.colors.join(', ') : '';
+                        if (product.variants) currentProductVariants = product.variants;
                         if (product.stock) currentProductStock = JSON.parse(JSON.stringify(product.stock));
                     } else {
                         document.getElementById('modal-title').textContent = 'Add New Design';
                         document.getElementById('product-id').value = '';
                         document.getElementById('existing-image-url').value = '';
                     }
+                    renderCurrentProductVariants();
+                    updateStockDropdowns();
                     renderStockList(); 
                     productModal.classList.add('is-open');
                 }
@@ -268,7 +376,6 @@
                         if (snapshot.empty) { productList.innerHTML = '<p class="text-center text-gray-500 p-8">No designs found.</p>'; return; }
                         snapshot.forEach(doc => {
                             const product = { id: doc.id, ...doc.data() };
-                            // Calculate total stock for display
                             let totalStock = 0;
                             if (product.stock) {
                                 Object.values(product.stock).forEach(sizes => {
@@ -279,7 +386,7 @@
                             }
                             const productEl = document.createElement('div');
                             productEl.className = 'flex items-center justify-between p-4 border-b';
-                            productEl.innerHTML = `<div class="flex items-center"><img src="${product.imageUrl}" alt="${product.name}" class="w-16 h-16 object-cover rounded-md mr-4" onerror="this.onerror=null;this.src='https://placehold.co/100x100/cccccc/ffffff?text=X';"><div><p class="font-semibold text-lg">${product.name}</p><p class="text-sm text-gray-500">Total Stock: <span class="font-bold">${totalStock}</span></p></div></div><div class="text-right"><div class="space-x-2 mt-2"><button class="edit-btn bg-blue-500 text-white text-sm font-bold py-1 px-3 rounded hover:bg-blue-600" data-id="${product.id}">Edit</button><button class="delete-btn bg-red-500 text-white text-sm font-bold py-1 px-3 rounded hover:bg-red-600" data-id="${product.id}" data-name="${product.name}">Delete</button></div></div>`;
+                            productEl.innerHTML = `<div class="flex items-center"><img src="${product.imageUrl}" alt="${product.name}" class="w-16 h-16 object-cover rounded-md mr-4" onerror="this.onerror=null;this.src='https://placehold.co/100x100/cccccc/ffffff?text=X';"><div><p class="font-semibold text-lg">${product.name}</p><p class="text-sm text-gray-500">Variants: ${Object.keys(product.variants || {}).length} | Stock: <span class="font-bold">${totalStock}</span></p></div></div><div class="text-right"><div class="space-x-2 mt-2"><button class="edit-btn bg-blue-500 text-white text-sm font-bold py-1 px-3 rounded hover:bg-blue-600" data-id="${product.id}">Edit</button><button class="delete-btn bg-red-500 text-white text-sm font-bold py-1 px-3 rounded hover:bg-red-600" data-id="${product.id}" data-name="${product.name}">Delete</button></div></div>`;
                             productList.appendChild(productEl);
                         });
                     }, error => console.error("Error loading products: ", error));
@@ -294,34 +401,35 @@
                     finally { saveBtn.disabled = false; saveBtn.textContent = 'Save Design'; }
                 }
 
-                // --- EVENT LISTENERS ---
                 addNewBtn.addEventListener('click', () => openProductModal());
                 document.querySelectorAll('.cancel-btn').forEach(btn => btn.addEventListener('click', closeModal));
                 manageGlobalVariantsBtn.addEventListener('click', () => globalVariantModal.classList.add('is-open'));
+                addVariantBtn.addEventListener('click', () => { const selectedVariantName = globalVariantSelect.value; if (selectedVariantName && globalVariants[selectedVariantName]) { currentProductVariants[selectedVariantName] = globalVariants[selectedVariantName]; renderCurrentProductVariants(); } });
+                variantListDiv.addEventListener('click', (e) => { if (e.target.classList.contains('delete-variant-btn')) { delete currentProductVariants[e.target.dataset.name]; renderCurrentProductVariants(); } });
                 
+                // Update stock dropdowns when sizes/colors change
+                document.getElementById('product-sizes').addEventListener('input', updateStockDropdowns);
+                document.getElementById('product-colors').addEventListener('input', updateStockDropdowns);
+
                 globalVariantForm.addEventListener('submit', async (e) => { e.preventDefault(); const name = document.getElementById('new-global-variant-name').value.trim(); const price = parseFloat(document.getElementById('new-global-variant-price').value); if (name && !isNaN(price)) { globalVariants[name] = price; await globalVariantsRef.set({ variants: globalVariants }); updateGlobalVariantUI(); globalVariantForm.reset(); } });
                 document.getElementById('global-variant-list').addEventListener('click', async (e) => { if (e.target.classList.contains('delete-global-variant-btn')) { const name = e.target.dataset.name; if (confirm(`Are you sure you want to delete the global variant "${name}"?`)) { delete globalVariants[name]; await globalVariantsRef.set({ variants: globalVariants }); updateGlobalVariantUI(); } } });
                 
                 productForm.addEventListener('submit', async (e) => { 
                     e.preventDefault(); 
-                    if (Object.keys(currentProductStock).length === 0) { 
-                        document.getElementById('stock-error').style.display = 'block'; 
-                        return; 
-                    } 
-                    document.getElementById('stock-error').style.display = 'none'; 
+                    if (Object.keys(currentProductVariants).length === 0) { document.getElementById('variant-error').style.display = 'block'; return; } 
+                    document.getElementById('variant-error').style.display = 'none'; 
                     saveBtn.disabled = true; 
                     saveBtn.textContent = 'Saving...'; 
                     const id = document.getElementById('product-id').value; 
                     const imageFile = document.getElementById('product-image-file').files[0]; 
                     let imageUrl = document.getElementById('existing-image-url').value; 
                     
-                    // NEW: Prepare product data with the stock object
                     const productData = { 
                         name: document.getElementById('product-name').value, 
-                        stock: currentProductStock,
-                        // Also save the global variants and their prices at the time of saving
-                        // This is useful for the customer page to know the price of each variant
-                        variants: globalVariants 
+                        variants: currentProductVariants, 
+                        sizes: document.getElementById('product-sizes').value.split(',').map(s => s.trim()).filter(Boolean), 
+                        colors: document.getElementById('product-colors').value.split(',').map(c => c.trim()).filter(Boolean), 
+                        stock: currentProductStock // Save the stock object
                     }; 
                     
                     if (imageFile) { 
