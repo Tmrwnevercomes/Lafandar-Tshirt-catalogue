@@ -72,7 +72,7 @@
                 </div>
                 <div id="inventory-section" class="mt-6 pt-6 border-t"><h3 class="text-lg font-semibold mb-2">Inventory</h3><p id="inventory-placeholder" class="text-sm text-gray-500">Define variants, sizes, and colors to manage stock.</p><div id="inventory-table" class="max-h-64 overflow-y-auto"></div></div>
             </form>
-            <div class="p-4 bg-gray-50 border-t flex justify-end space-x-2"><button type="button" class="cancel-btn bg-gray-200 text-gray-800 font-bold py-2 px-4 rounded-lg hover:bg-gray-300">Cancel</button><button type="button" id="save-btn" class="bg-green-500 text-white font-bold py-2 px-4 rounded-lg hover:bg-green-600">Save Design</button></div>
+            <div class="p-4 bg-gray-50 border-t flex justify-end space-x-2"><button type="button" class="cancel-btn bg-gray-200 text-gray-800 font-bold py-2 px-4 rounded-lg hover:bg-gray-300">Cancel</button><button type="submit" form="product-form" id="save-btn" class="bg-green-500 text-white font-bold py-2 px-4 rounded-lg hover:bg-green-600">Save Design</button></div>
         </div>
     </div>
 
@@ -95,6 +95,7 @@
   messagingSenderId: "428518895959",
   appId: "1:428518895959:web:8e1fccd4d6f1e2c8b00e12"
 };
+
         firebase.initializeApp(firebaseConfig);
         const auth = firebase.auth();
         const db = firebase.firestore();
@@ -106,186 +107,179 @@
         let currentProductVariants = {};
         let currentInventory = {};
 
-        document.addEventListener('DOMContentLoaded', () => {
-            const loginView = document.getElementById('login-view');
-            const adminPanel = document.getElementById('admin-panel');
-            const loginForm = document.getElementById('login-form');
-            const loginError = document.getElementById('login-error');
-            const logoutBtn = document.getElementById('logout-btn');
-            const userEmailEl = document.getElementById('user-email');
-            
-            auth.onAuthStateChanged(user => {
-                if (user) {
-                    loginView.style.display = 'none';
-                    adminPanel.style.display = 'block';
-                    userEmailEl.textContent = `Logged in as: ${user.email}`;
-                    initializeAdminPanel();
-                } else {
-                    loginView.style.display = 'flex';
-                    adminPanel.style.display = 'none';
-                }
-            });
+        // --- ELEMENT SELECTORS (GLOBAL) ---
+        const loginView = document.getElementById('login-view');
+        const adminPanel = document.getElementById('admin-panel');
+        const loginForm = document.getElementById('login-form');
+        const loginError = document.getElementById('login-error');
+        const logoutBtn = document.getElementById('logout-btn');
+        const userEmailEl = document.getElementById('user-email');
+        const productList = document.getElementById('product-list');
+        const productModal = document.getElementById('product-modal');
+        const globalVariantModal = document.getElementById('global-variant-modal');
+        const productForm = document.getElementById('product-form');
+        const globalVariantForm = document.getElementById('global-variant-form');
+        const manageGlobalVariantsBtn = document.getElementById('manage-global-variants-btn');
+        const addNewBtn = document.getElementById('add-new-btn');
+        const saveBtn = document.getElementById('save-btn');
+        const variantListDiv = document.getElementById('variant-list');
+        const addVariantBtn = document.getElementById('add-variant-btn');
+        const globalVariantSelect = document.getElementById('global-variant-select');
+        const globalVariantListDiv = document.getElementById('global-variant-list');
+        const sizesInput = document.getElementById('product-sizes');
+        const colorsInput = document.getElementById('product-colors');
 
-            loginForm.addEventListener('submit', (e) => {
-                e.preventDefault();
-                const email = loginForm.email.value;
-                const password = loginForm.password.value;
-                auth.signInWithEmailAndPassword(email, password)
-                    .catch(error => {
-                        loginError.textContent = error.message;
-                        loginError.style.display = 'block';
-                    });
-            });
+        // --- AUTH FUNCTIONS ---
+        auth.onAuthStateChanged(user => {
+            if (user) {
+                loginView.style.display = 'none';
+                adminPanel.style.display = 'block';
+                userEmailEl.textContent = `Logged in as: ${user.email}`;
+                initializeAdminPanel();
+            } else {
+                loginView.style.display = 'flex';
+                adminPanel.style.display = 'none';
+            }
+        });
 
-            logoutBtn.addEventListener('click', () => auth.signOut());
+        loginForm.addEventListener('submit', (e) => {
+            e.preventDefault();
+            const email = loginForm.email.value;
+            const password = loginForm.password.value;
+            auth.signInWithEmailAndPassword(email, password)
+                .catch(error => {
+                    loginError.textContent = error.message;
+                    loginError.style.display = 'block';
+                });
+        });
 
-            function initializeAdminPanel() {
-                const productList = document.getElementById('product-list');
-                const productModal = document.getElementById('product-modal');
-                const globalVariantModal = document.getElementById('global-variant-modal');
-                const productForm = document.getElementById('product-form');
-                const globalVariantForm = document.getElementById('global-variant-form');
-                const manageGlobalVariantsBtn = document.getElementById('manage-global-variants-btn');
-                const addNewBtn = document.getElementById('add-new-btn');
-                const saveBtn = document.getElementById('save-btn');
-                const variantListDiv = document.getElementById('variant-list');
-                const addVariantBtn = document.getElementById('add-variant-btn');
-                const globalVariantSelect = document.getElementById('global-variant-select');
-                const globalVariantListDiv = document.getElementById('global-variant-list');
-                const sizesInput = document.getElementById('product-sizes');
-                const colorsInput = document.getElementById('product-colors');
+        logoutBtn.addEventListener('click', () => auth.signOut());
 
-                async function loadGlobalVariants() {
-                    try {
-                        const doc = await globalVariantsRef.get();
-                        if (doc.exists && doc.data().variants) { globalVariants = doc.data().variants; } 
-                        else { globalVariants = { "Oversize Tee": 599, "Hoodie": 899 }; await globalVariantsRef.set({ variants: globalVariants }); }
-                        updateGlobalVariantUI();
-                    } catch (error) { console.error("Error loading global variants:", error); }
-                }
+        // --- CORE ADMIN FUNCTIONS ---
+        async function loadGlobalVariants() {
+            try {
+                const doc = await globalVariantsRef.get();
+                if (doc.exists && doc.data().variants) { globalVariants = doc.data().variants; } 
+                else { globalVariants = { "Oversize Tee": 599, "Hoodie": 899 }; await globalVariantsRef.set({ variants: globalVariants }); }
+                updateGlobalVariantUI();
+            } catch (error) { console.error("Error loading global variants:", error); }
+        }
 
-                function updateGlobalVariantUI() {
-                    globalVariantSelect.innerHTML = ''; globalVariantListDiv.innerHTML = '';
-                    for (const name in globalVariants) {
-                        const price = globalVariants[name];
-                        const option = document.createElement('option');
-                        option.value = name; option.textContent = `${name} - ₹${price}`;
-                        globalVariantSelect.appendChild(option);
-                        const itemEl = document.createElement('div');
-                        itemEl.className = 'list-item flex items-center justify-between p-2 border-b';
-                        itemEl.innerHTML = `<span>${name} - ₹${price}</span><button class="delete-global-variant-btn bg-red-500 text-white text-xs font-bold py-1 px-2 rounded hover:bg-red-600" data-name="${name}">Delete</button>`;
-                        globalVariantListDiv.appendChild(itemEl);
-                    }
-                }
-                
-                function renderCurrentProductVariants() {
-                    variantListDiv.innerHTML = '';
-                    if (Object.keys(currentProductVariants).length === 0) { variantListDiv.innerHTML = '<p class="text-sm text-gray-500 text-center">No variants added yet.</p>'; }
-                    for (const name in currentProductVariants) {
-                        const price = currentProductVariants[name];
-                        const itemEl = document.createElement('div');
-                        itemEl.className = 'flex items-center justify-between bg-white p-2 rounded';
-                        itemEl.innerHTML = `<p class="text-sm font-medium">${name} - ₹${price}</p><button type="button" class="delete-variant-btn text-red-500 hover:text-red-700 text-xs font-bold" data-name="${name}">Remove</button>`;
-                        variantListDiv.appendChild(itemEl);
-                    }
-                    const sizes = sizesInput.value.split(',').map(s => s.trim()).filter(Boolean);
-                    const colors = colorsInput.value.split(',').map(c => c.trim()).filter(Boolean);
-                    generateInventoryTable(currentProductVariants, sizes, colors, currentInventory);
-                }
+        function updateGlobalVariantUI() {
+            globalVariantSelect.innerHTML = ''; globalVariantListDiv.innerHTML = '';
+            for (const name in globalVariants) {
+                const price = globalVariants[name];
+                const option = document.createElement('option');
+                option.value = name; option.textContent = `${name} - ₹${price}`;
+                globalVariantSelect.appendChild(option);
+                const itemEl = document.createElement('div');
+                itemEl.className = 'list-item flex items-center justify-between p-2 border-b';
+                itemEl.innerHTML = `<span>${name} - ₹${price}</span><button class="delete-global-variant-btn bg-red-500 text-white text-xs font-bold py-1 px-2 rounded hover:bg-red-600" data-name="${name}">Delete</button>`;
+                globalVariantListDiv.appendChild(itemEl);
+            }
+        }
+        
+        function renderCurrentProductVariants() {
+            variantListDiv.innerHTML = '';
+            if (Object.keys(currentProductVariants).length === 0) { variantListDiv.innerHTML = '<p class="text-sm text-gray-500 text-center">No variants added yet.</p>'; }
+            for (const name in currentProductVariants) {
+                const price = currentProductVariants[name];
+                const itemEl = document.createElement('div');
+                itemEl.className = 'flex items-center justify-between bg-white p-2 rounded';
+                itemEl.innerHTML = `<p class="text-sm font-medium">${name} - ₹${price}</p><button type="button" class="delete-variant-btn text-red-500 hover:text-red-700 text-xs font-bold" data-name="${name}">Remove</button>`;
+                variantListDiv.appendChild(itemEl);
+            }
+            const sizes = sizesInput.value.split(',').map(s => s.trim()).filter(Boolean);
+            const colors = colorsInput.value.split(',').map(c => c.trim()).filter(Boolean);
+            generateInventoryTable(currentProductVariants, sizes, colors, currentInventory);
+        }
 
-                function generateInventoryTable(variants, sizes, colors, inventoryData = {}) {
-                    const tableContainer = document.getElementById('inventory-table');
-                    const placeholder = document.getElementById('inventory-placeholder');
-                    tableContainer.innerHTML = '';
-                    if (Object.keys(variants).length === 0 || sizes.length === 0 || colors.length === 0) { placeholder.style.display = 'block'; return; }
-                    placeholder.style.display = 'none';
-                    const table = document.createElement('table');
-                    table.className = 'w-full text-sm text-left';
-                    table.innerHTML = `<thead class="bg-gray-100"><tr><th class="p-2">Variant</th><th class="p-2">Size</th><th class="p-2">Color</th><th class="p-2">Stock</th></tr></thead><tbody></tbody>`;
-                    const tbody = table.querySelector('tbody');
-                    for (const variantName in variants) {
-                        sizes.forEach(size => {
-                            colors.forEach(color => {
-                                const sku = `${variantName}_${size}_${color}`.replace(/\s+/g, '_');
-                                const stock = inventoryData[sku] || 0;
-                                const row = document.createElement('tr');
-                                row.className = 'border-b';
-                                row.innerHTML = `<td class="p-2">${variantName}</td><td class="p-2">${size}</td><td class="p-2">${color}</td><td class="p-2"><input type="number" min="0" value="${stock}" class="inventory-input w-20 p-1 border rounded" data-sku="${sku}"></td>`;
-                                tbody.appendChild(row);
-                            });
-                        });
-                    }
-                    tableContainer.appendChild(table);
-                }
-
-                function openProductModal(product = null) {
-                    productForm.reset(); document.getElementById('upload-progress-container').style.display = 'none'; saveBtn.disabled = false; currentProductVariants = {}; currentInventory = {};
-                    if (product) {
-                        document.getElementById('modal-title').textContent = 'Edit Design';
-                        document.getElementById('product-id').value = product.id;
-                        document.getElementById('product-name').value = product.name;
-                        document.getElementById('existing-image-url').value = product.imageUrl;
-                        document.getElementById('product-sizes').value = product.sizes ? product.sizes.join(', ') : '';
-                        document.getElementById('product-colors').value = product.colors ? product.colors.join(', ') : '';
-                        if (product.variants) currentProductVariants = product.variants;
-                        if (product.inventory) currentInventory = product.inventory;
-                    } else {
-                        document.getElementById('modal-title').textContent = 'Add New Design';
-                        document.getElementById('product-id').value = '';
-                        document.getElementById('existing-image-url').value = '';
-                    }
-                    renderCurrentProductVariants();
-                }
-
-                function closeModal() { productModal.classList.remove('is-open'); globalVariantModal.classList.remove('is-open'); }
-                
-                function loadProducts() {
-                    productsCollection.orderBy("name").onSnapshot(snapshot => {
-                        productList.innerHTML = '';
-                        if (snapshot.empty) { productList.innerHTML = '<p class="text-center text-gray-500 p-8">No designs found.</p>'; return; }
-                        snapshot.forEach(doc => {
-                            const product = { id: doc.id, ...doc.data() };
-                            const totalStock = product.inventory ? Object.values(product.inventory).reduce((a, b) => a + b, 0) : 0;
-                            const productEl = document.createElement('div');
-                            productEl.className = 'flex items-center justify-between p-4 border-b';
-                            productEl.innerHTML = `<div class="flex items-center"><img src="${product.imageUrl}" alt="${product.name}" class="w-16 h-16 object-cover rounded-md mr-4" onerror="this.onerror=null;this.src='https://placehold.co/100x100/cccccc/ffffff?text=X';"><div><p class="font-semibold text-lg">${product.name}</p><p class="text-sm text-gray-500">Total Stock: ${totalStock}</p></div></div><div class="text-right"><div class="space-x-2 mt-2"><button class="edit-btn bg-blue-500 text-white text-sm font-bold py-1 px-3 rounded hover:bg-blue-600" data-id="${product.id}">Edit</button><button class="delete-btn bg-red-500 text-white text-sm font-bold py-1 px-3 rounded hover:bg-red-600" data-id="${product.id}" data-name="${product.name}">Delete</button></div></div>`;
-                            productList.appendChild(productEl);
-                        });
-                    }, error => console.error("Error loading products: ", error));
-                }
-
-                async function saveProduct(id, data) {
-                    try {
-                        if (id) { await productsCollection.doc(id).update(data); } 
-                        else { if (!data.imageUrl) { alert("Please select an image for the new design."); saveBtn.disabled = false; saveBtn.textContent = 'Save Design'; return; } await productsCollection.add(data); }
-                        closeModal();
-                    } catch (error) { console.error("Error saving product: ", error); alert("Could not save the design."); } 
-                    finally { saveBtn.disabled = false; saveBtn.textContent = 'Save Design'; }
-                }
-
-                addNewBtn.addEventListener('click', () => openProductModal());
-                document.querySelectorAll('.cancel-btn').forEach(btn => btn.addEventListener('click', closeModal));
-                manageGlobalVariantsBtn.addEventListener('click', () => globalVariantModal.classList.add('is-open'));
-                addVariantBtn.addEventListener('click', () => { const selectedVariantName = globalVariantSelect.value; if (selectedVariantName && globalVariants[selectedVariantName]) { currentProductVariants[selectedVariantName] = globalVariants[selectedVariantName]; renderCurrentProductVariants(); } });
-                variantListDiv.addEventListener('click', (e) => { if (e.target.classList.contains('delete-variant-btn')) { delete currentProductVariants[e.target.dataset.name]; renderCurrentProductVariants(); } });
-                globalVariantForm.addEventListener('submit', async (e) => { e.preventDefault(); const name = document.getElementById('new-global-variant-name').value.trim(); const price = parseFloat(document.getElementById('new-global-variant-price').value); if (name && !isNaN(price)) { globalVariants[name] = price; await globalVariantsRef.set({ variants: globalVariants }); updateGlobalVariantUI(); globalVariantForm.reset(); } });
-                globalVariantListDiv.addEventListener('click', async (e) => { if (e.target.classList.contains('delete-global-variant-btn')) { const name = e.target.dataset.name; if (confirm(`Are you sure you want to delete the global variant "${name}"?`)) { delete globalVariants[name]; await globalVariantsRef.set({ variants: globalVariants }); updateGlobalVariantUI(); } } });
-                saveBtn.addEventListener('click', async (e) => { e.preventDefault(); if (Object.keys(currentProductVariants).length === 0) { document.getElementById('variant-error').style.display = 'block'; return; } document.getElementById('variant-error').style.display = 'none'; saveBtn.disabled = true; saveBtn.textContent = 'Saving...'; const id = document.getElementById('product-id').value; const imageFile = document.getElementById('product-image-file').files[0]; let imageUrl = document.getElementById('existing-image-url').value; const inventoryInputs = document.querySelectorAll('.inventory-input'); const inventoryData = {}; inventoryInputs.forEach(input => { inventoryData[input.dataset.sku] = parseInt(input.value, 10) || 0; }); const productData = { name: document.getElementById('product-name').value, variants: currentProductVariants, sizes: document.getElementById('product-sizes').value.split(',').map(s => s.trim()).filter(Boolean), colors: document.getElementById('product-colors').value.split(',').map(c => c.trim()).filter(Boolean), inventory: inventoryData }; if (imageFile) { const storageRef = storage.ref(`products/${Date.now()}-${imageFile.name}`); const uploadTask = storageRef.put(imageFile); document.getElementById('upload-progress-container').style.display = 'block'; uploadTask.on('state_changed', (snapshot) => { document.getElementById('upload-progress-bar').style.width = ((snapshot.bytesTransferred / snapshot.totalBytes) * 100) + '%'; }, (error) => { console.error("Upload failed:", error); alert("Image upload failed."); saveBtn.disabled = false; saveBtn.textContent = 'Save Design'; }, async () => { imageUrl = await uploadTask.snapshot.ref.getDownloadURL(); productData.imageUrl = imageUrl; await saveProduct(id, productData); }); } else { productData.imageUrl = imageUrl; await saveProduct(id, productData); } });
-                productList.addEventListener('click', async (e) => { const id = e.target.dataset.id; if (e.target.classList.contains('delete-btn')) { if (confirm(`Are you sure you want to delete "${e.target.dataset.name}"?`)) { try { await productsCollection.doc(id).delete(); } catch (error) { console.error("Error deleting product: ", error); } } } else if (e.target.classList.contains('edit-btn')) { const doc = await productsCollection.doc(id).get(); if (doc.exists) { openProductModal({ id: doc.id, ...doc.data() }); } } });
-                
-                [sizesInput, colorsInput].forEach(input => {
-                    input.addEventListener('keyup', () => {
-                        const sizes = sizesInput.value.split(',').map(s => s.trim()).filter(Boolean);
-                        const colors = colorsInput.value.split(',').map(c => c.trim()).filter(Boolean);
-                        generateInventoryTable(currentProductVariants, sizes, colors, currentInventory);
+        function generateInventoryTable(variants, sizes, colors, inventoryData = {}) {
+            const tableContainer = document.getElementById('inventory-table');
+            const placeholder = document.getElementById('inventory-placeholder');
+            tableContainer.innerHTML = '';
+            if (Object.keys(variants).length === 0 || sizes.length === 0 || colors.length === 0) { placeholder.style.display = 'block'; return; }
+            placeholder.style.display = 'none';
+            const table = document.createElement('table');
+            table.className = 'w-full text-sm text-left';
+            table.innerHTML = `<thead class="bg-gray-100"><tr><th class="p-2">Variant</th><th class="p-2">Size</th><th class="p-2">Color</th><th class="p-2">Stock</th></tr></thead><tbody></tbody>`;
+            const tbody = table.querySelector('tbody');
+            for (const variantName in variants) {
+                sizes.forEach(size => {
+                    colors.forEach(color => {
+                        const sku = `${variantName}_${size}_${color}`.replace(/\s+/g, '_');
+                        const stock = inventoryData[sku] || 0;
+                        const row = document.createElement('tr');
+                        row.className = 'border-b';
+                        row.innerHTML = `<td class="p-2">${variantName}</td><td class="p-2">${size}</td><td class="p-2">${color}</td><td class="p-2"><input type="number" min="0" value="${stock}" class="inventory-input w-20 p-1 border rounded" data-sku="${sku}"></td>`;
+                        tbody.appendChild(row);
                     });
                 });
-                
-                loadGlobalVariants().then(loadProducts);
             }
+            tableContainer.appendChild(table);
+        }
 
-            checkPassword();
-        });
+        function openProductModal(product = null) {
+            productForm.reset(); document.getElementById('upload-progress-container').style.display = 'none'; saveBtn.disabled = false; currentProductVariants = {}; currentInventory = {};
+            if (product) {
+                document.getElementById('modal-title').textContent = 'Edit Design';
+                document.getElementById('product-id').value = product.id;
+                document.getElementById('product-name').value = product.name;
+                document.getElementById('existing-image-url').value = product.imageUrl;
+                document.getElementById('product-sizes').value = product.sizes ? product.sizes.join(', ') : '';
+                document.getElementById('product-colors').value = product.colors ? product.colors.join(', ') : '';
+                if (product.variants) currentProductVariants = product.variants;
+                if (product.inventory) currentInventory = product.inventory;
+            } else {
+                document.getElementById('modal-title').textContent = 'Add New Design';
+                document.getElementById('product-id').value = '';
+                document.getElementById('existing-image-url').value = '';
+            }
+            renderCurrentProductVariants();
+            productModal.classList.add('is-open');
+        }
+
+        function closeModal() { productModal.classList.remove('is-open'); globalVariantModal.classList.remove('is-open'); }
+        
+        function loadProducts() {
+            productsCollection.orderBy("name").onSnapshot(snapshot => {
+                productList.innerHTML = '';
+                if (snapshot.empty) { productList.innerHTML = '<p class="text-center text-gray-500 p-8">No designs found.</p>'; return; }
+                snapshot.forEach(doc => {
+                    const product = { id: doc.id, ...doc.data() };
+                    const totalStock = product.inventory ? Object.values(product.inventory).reduce((a, b) => a + b, 0) : 0;
+                    const productEl = document.createElement('div');
+                    productEl.className = 'flex items-center justify-between p-4 border-b';
+                    productEl.innerHTML = `<div class="flex items-center"><img src="${product.imageUrl}" alt="${product.name}" class="w-16 h-16 object-cover rounded-md mr-4" onerror="this.onerror=null;this.src='https://placehold.co/100x100/cccccc/ffffff?text=X';"><div><p class="font-semibold text-lg">${product.name}</p><p class="text-sm text-gray-500">Total Stock: ${totalStock}</p></div></div><div class="text-right"><div class="space-x-2 mt-2"><button class="edit-btn bg-blue-500 text-white text-sm font-bold py-1 px-3 rounded hover:bg-blue-600" data-id="${product.id}">Edit</button><button class="delete-btn bg-red-500 text-white text-sm font-bold py-1 px-3 rounded hover:bg-red-600" data-id="${product.id}" data-name="${product.name}">Delete</button></div></div>`;
+                    productList.appendChild(productEl);
+                });
+            }, error => console.error("Error loading products: ", error));
+        }
+
+        async function saveProduct(id, data) {
+            try {
+                if (id) { await productsCollection.doc(id).update(data); } 
+                else { if (!data.imageUrl) { alert("Please select an image for the new design."); saveBtn.disabled = false; saveBtn.textContent = 'Save Design'; return; } await productsCollection.add(data); }
+                closeModal();
+            } catch (error) { console.error("Error saving product: ", error); alert("Could not save the design."); } 
+            finally { saveBtn.disabled = false; saveBtn.textContent = 'Save Design'; }
+        }
+
+        // --- EVENT LISTENER SETUP ---
+        function initializeAdminPanel() {
+            addNewBtn.addEventListener('click', () => openProductModal());
+            document.querySelectorAll('.cancel-btn').forEach(btn => btn.addEventListener('click', closeModal));
+            manageGlobalVariantsBtn.addEventListener('click', () => globalVariantModal.classList.add('is-open'));
+            addVariantBtn.addEventListener('click', () => { const selectedVariantName = globalVariantSelect.value; if (selectedVariantName && globalVariants[selectedVariantName]) { currentProductVariants[selectedVariantName] = globalVariants[selectedVariantName]; renderCurrentProductVariants(); } });
+            variantListDiv.addEventListener('click', (e) => { if (e.target.classList.contains('delete-variant-btn')) { delete currentProductVariants[e.target.dataset.name]; renderCurrentProductVariants(); } });
+            globalVariantForm.addEventListener('submit', async (e) => { e.preventDefault(); const name = document.getElementById('new-global-variant-name').value.trim(); const price = parseFloat(document.getElementById('new-global-variant-price').value); if (name && !isNaN(price)) { globalVariants[name] = price; await globalVariantsRef.set({ variants: globalVariants }); updateGlobalVariantUI(); globalVariantForm.reset(); } });
+            globalVariantListDiv.addEventListener('click', async (e) => { if (e.target.classList.contains('delete-global-variant-btn')) { const name = e.target.dataset.name; if (confirm(`Are you sure you want to delete the global variant "${name}"?`)) { delete globalVariants[name]; await globalVariantsRef.set({ variants: globalVariants }); updateGlobalVariantUI(); } } });
+            productForm.addEventListener('submit', async (e) => { e.preventDefault(); if (Object.keys(currentProductVariants).length === 0) { document.getElementById('variant-error').style.display = 'block'; return; } document.getElementById('variant-error').style.display = 'none'; saveBtn.disabled = true; saveBtn.textContent = 'Saving...'; const id = document.getElementById('product-id').value; const imageFile = document.getElementById('product-image-file').files[0]; let imageUrl = document.getElementById('existing-image-url').value; const inventoryInputs = document.querySelectorAll('.inventory-input'); const inventoryData = {}; inventoryInputs.forEach(input => { inventoryData[input.dataset.sku] = parseInt(input.value, 10) || 0; }); const productData = { name: document.getElementById('product-name').value, variants: currentProductVariants, sizes: document.getElementById('product-sizes').value.split(',').map(s => s.trim()).filter(Boolean), colors: document.getElementById('product-colors').value.split(',').map(c => c.trim()).filter(Boolean), inventory: inventoryData }; if (imageFile) { const storageRef = storage.ref(`products/${Date.now()}-${imageFile.name}`); const uploadTask = storageRef.put(imageFile); document.getElementById('upload-progress-container').style.display = 'block'; uploadTask.on('state_changed', (snapshot) => { document.getElementById('upload-progress-bar').style.width = ((snapshot.bytesTransferred / snapshot.totalBytes) * 100) + '%'; }, (error) => { console.error("Upload failed:", error); alert("Image upload failed."); saveBtn.disabled = false; saveBtn.textContent = 'Save Design'; }, async () => { imageUrl = await uploadTask.snapshot.ref.getDownloadURL(); productData.imageUrl = imageUrl; await saveProduct(id, productData); }); } else { productData.imageUrl = imageUrl; await saveProduct(id, productData); } });
+            productList.addEventListener('click', async (e) => { const id = e.target.dataset.id; if (e.target.classList.contains('delete-btn')) { if (confirm(`Are you sure you want to delete "${e.target.dataset.name}"?`)) { try { await productsCollection.doc(id).delete(); } catch (error) { console.error("Error deleting product: ", error); } } } else if (e.target.classList.contains('edit-btn')) { const doc = await productsCollection.doc(id).get(); if (doc.exists) { openProductModal({ id: doc.id, ...doc.data() }); } } });
+            [sizesInput, colorsInput].forEach(input => { input.addEventListener('keyup', () => { const sizes = sizesInput.value.split(',').map(s => s.trim()).filter(Boolean); const colors = colorsInput.value.split(',').map(c => c.trim()).filter(Boolean); generateInventoryTable(currentProductVariants, sizes, colors, currentInventory); }); });
+            
+            loadGlobalVariants().then(loadProducts);
+        }
     </script>
 </body>
 </html>
