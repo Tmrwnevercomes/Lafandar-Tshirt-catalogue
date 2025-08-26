@@ -83,7 +83,20 @@
             const yourWhatsAppNumber = '918210746035'; 
             let products = [];
             let cart = {}; 
-            let toastTimer; // For improved toast logic
+            let toastTimer;
+
+            // --- NEW: Load cart from localStorage ---
+            function loadCart() {
+                const savedCart = localStorage.getItem('tshirtCart');
+                if (savedCart) {
+                    cart = JSON.parse(savedCart);
+                }
+            }
+
+            // --- NEW: Save cart to localStorage ---
+            function saveCart() {
+                localStorage.setItem('tshirtCart', JSON.stringify(cart));
+            }
 
             const productGrid = document.getElementById('product-grid');
             const loadingSpinner = document.getElementById('loading');
@@ -199,6 +212,7 @@
                 }
                 cartCount.textContent = totalItems;
                 cartTotal.textContent = `₹${totalPrice.toFixed(2)}`;
+                saveCart(); // Save cart on every update
             }
 
             function showToast() {
@@ -217,7 +231,7 @@
                     const productId = e.target.dataset.productId;
                     const quantityInput = cardBody.querySelector('.quantity-input');
                     const category = cardBody.querySelector('.product-variant').value;
-                    if (!category) { // Prevent adding if "Not Available" is selected
+                    if (!category) {
                         alert("This product is not available in any category.");
                         return;
                     }
@@ -234,7 +248,7 @@
                 }
                 if (e.target.classList.contains('product-variant')) {
                     const selectedCategory = e.target.value;
-                    if (!selectedCategory) return; // Don't update price for "Not Available"
+                    if (!selectedCategory) return;
                     const cardBody = e.target.closest('.p-4');
                     const priceEl = cardBody.parentElement.querySelector('.product-price');
                     const productId = cardBody.querySelector('.add-to-cart-btn').dataset.productId;
@@ -274,6 +288,9 @@
                 window.open(whatsappUrl, '_blank');
             });
 
+            // --- INITIALIZATION ---
+            loadCart(); // Load cart from storage first
+            updateCart(); // Update UI with loaded cart
             fetchProducts();
         });
     </script>
